@@ -11,176 +11,160 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
 <style>
-/* レイアウト：上に動物の名前と数値、真ん中に3Dの動物、下にボタンとタブ。
-   見た目は「晴れた日の野原」1種類に固定（ゲームなのでライト/ダーク切替なし）
+/* レイアウト：上に動物の名前と数値、真ん中に3Dのお部屋、下にお世話ボタンとタブ。
+   見た目は1種類に固定（ゲームなのでライト/ダーク切替なし）。
    TODO: 色を変えたいときは、この :root の中だけ書き換えれば全体に反映されます */
 :root {
-  --sky: #cfe9f3;        /* 空 */
-  --sky2: #eef8fb;       /* 空（地平線近く） */
-  --card: #ffffff;       /* カード・ボタンの地 */
-  --ink: #3b3552;        /* 文字 */
-  --soft: #7d7796;       /* 弱い文字 */
-  --line: #e4e0ee;       /* 線 */
-  --coral: #f2876b;      /* 強調（ボタン・選択中） */
-  --leaf: #6fbf73;       /* 畑・成功 */
-  --sea: #4aa3d8;        /* 海 */
-  --gold: #f6c453;       /* なかよし */
+  --sky: #cfe9f3; --sky2: #eef8fb;
+  --card: #ffffff; --ink: #3b3552; --soft: #7d7796; --line: #e4e0ee;
+  --coral: #f2876b; --leaf: #6fbf73; --sea: #4aa3d8; --gold: #f6c453; --mint: #7fcfc4;
   --font: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, sans-serif;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
-body {
-  font-family: var(--font); color: var(--ink); background: var(--sky);
-  overflow: hidden; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
-}
+body { font-family: var(--font); color: var(--ink); background: var(--sky); overflow: hidden; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+button:disabled { cursor: default; }
 [hidden] { display: none !important; }
-
-#app {
-  height: 100%; display: flex; flex-direction: column;
-  padding-top: env(safe-area-inset-top, 0px);
-}
+#app { height: 100%; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
 .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
-/* ---------- おせわタブ ---------- */
-.care-top {
-  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px));
-  display: grid; gap: 8px;
-}
+/* ---------- おせわ ---------- */
+.care-top { padding-top: 8px; padding-bottom: 6px; display: grid; gap: 6px; }
 .switcher { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.switcher .arrow {
-  width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.7);
-  font-size: 20px; font-weight: 900; color: var(--soft);
-}
-.switcher .arrow:disabled { opacity: .3; }
-.who { text-align: center; line-height: 1.2; }
-.who b { font-size: 22px; font-weight: 900; letter-spacing: .04em; }
-.who small { display: block; font-size: 12px; color: var(--soft); font-weight: 700; margin-top: 2px; }
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.stat { background: rgba(255,255,255,.75); border-radius: 12px; padding: 6px 8px; }
-.stat span { font-size: 11px; font-weight: 700; color: var(--soft); display: flex; justify-content: space-between; }
+.arrow { width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.7); font-size: 20px; font-weight: 900; color: var(--soft); flex: none; }
+.arrow:disabled { opacity: .3; }
+.who { text-align: center; line-height: 1.2; border: 0; background: transparent; padding: 2px 8px; border-radius: 12px; min-width: 0; }
+.who b { font-size: 20px; font-weight: 900; letter-spacing: .03em; }
+.who b::after { content: " ✎"; font-size: 12px; color: var(--soft); }
+.who small { display: block; font-size: 11px; color: var(--soft); font-weight: 700; margin-top: 2px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.stat { background: rgba(255,255,255,.75); border-radius: 10px; padding: 4px 7px; min-width: 0; }
+.stat span { font-size: 10px; font-weight: 700; color: var(--soft); display: flex; justify-content: space-between; gap: 2px; }
 .stat span em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--ink); }
-.meter { height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
-.meter i { display: block; height: 100%; border-radius: 4px; transition: width .4s; }
-.meter.hun i { background: var(--coral); }
-.meter.bond i { background: var(--gold); }
-.meter.eng i { background: var(--leaf); }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 3px; }
+.meter i { display: block; height: 100%; border-radius: 3px; transition: width .4s; }
+.hun i { background: var(--coral); } .bond i { background: var(--gold); } .eng i { background: var(--leaf); } .cln i { background: var(--mint); }
+.infobar { display: flex; gap: 6px; align-items: stretch; }
+.quest { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.75); border-radius: 10px; padding: 4px 8px; font-size: 11px; font-weight: 700; }
+.quest .qt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.quest .qt small { color: var(--soft); }
+.quest button { border: 0; border-radius: 999px; background: var(--gold); color: #6b4a00; font-size: 11px; font-weight: 900; padding: 3px 9px; flex: none; }
+.coins { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.75); border-radius: 10px; padding: 4px 9px; font-weight: 900; font-size: 13px; font-variant-numeric: tabular-nums; flex: none; }
+.coins svg { width: 16px; height: 16px; }
+.lv { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.75); border-radius: 10px; padding: 4px 8px; font-weight: 900; font-size: 11px; flex: none; }
 
-.stage {
-  position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none;
-  background: linear-gradient(180deg, var(--sky) 0%, var(--sky2) 70%);
-}
+.stage { position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none; background: var(--sky2); }
 .stage canvas { display: block; width: 100%; height: 100%; }
-.bubble {
-  position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
-  max-width: calc(100% - 32px); background: var(--card); border-radius: 16px; padding: 8px 14px;
-  font-size: 14px; font-weight: 700; text-align: center; line-height: 1.5;
-  box-shadow: 0 4px 12px rgba(59,53,82,.12); pointer-events: none;
-  transition: opacity .3s; text-wrap: balance;
-}
+.bubble { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); max-width: calc(100% - 32px); background: var(--card); border-radius: 16px; padding: 7px 14px; font-size: 13px; font-weight: 700; text-align: center; line-height: 1.5; box-shadow: 0 4px 12px rgba(59,53,82,.12); pointer-events: none; transition: opacity .3s; text-wrap: balance; z-index: 3; }
 .bubble.off { opacity: 0; }
-.fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.heart { position: absolute; width: 26px; height: 26px; animation: floatUp 1s ease-out forwards; }
+.fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+.heart, .spark { position: absolute; width: 24px; height: 24px; animation: floatUp 1s ease-out forwards; }
+.spark { width: 18px; height: 18px; }
 @keyframes floatUp { from { transform: translate(-50%, -50%) scale(.6); opacity: 1; } to { transform: translate(-50%, -150%) scale(1.1); opacity: 0; } }
-.flyfood { position: absolute; width: 44px; height: 44px; pointer-events: none; z-index: 20; transition: transform .55s cubic-bezier(.3,.7,.4,1), opacity .2s .5s; }
-.levelup {
-  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
-  font-size: 30px; font-weight: 900; color: var(--coral); text-align: center;
-  -webkit-text-stroke: 5px #fff; paint-order: stroke fill; animation: pop .5s cubic-bezier(.2,1.6,.4,1) both;
-}
+.zzz { position: absolute; font-weight: 900; color: #fff; font-size: 22px; animation: zz 2.4s ease-in-out infinite; -webkit-text-stroke: 3px #5b5d9a; paint-order: stroke fill; }
+@keyframes zz { 0% { transform: translate(0,0) scale(.7); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(30px,-60px) scale(1.2); opacity: 0; } }
+.nightveil { position: absolute; inset: 0; background: rgba(20,22,60,.35); pointer-events: none; transition: opacity .6s; z-index: 1; }
+.away { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: var(--card); border-radius: 18px; padding: 12px 18px; text-align: center; font-weight: 700; font-size: 14px; line-height: 1.6; z-index: 3; box-shadow: 0 4px 14px rgba(59,53,82,.15); max-width: calc(100% - 40px); }
+.away b { font-size: 18px; display: block; }
+.flyfood { position: fixed; width: 44px; height: 44px; pointer-events: none; z-index: 20; transition: transform .55s cubic-bezier(.3,.7,.4,1), opacity .2s .5s; }
+.levelup { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font-size: 28px; font-weight: 900; color: var(--coral); text-align: center; white-space: pre-line; -webkit-text-stroke: 5px #fff; paint-order: stroke fill; animation: pop .5s cubic-bezier(.2,1.6,.4,1) both; z-index: 4; }
 @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
 
-.actions {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
-  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
-  background: var(--sky2);
-}
-.act {
-  position: relative; border: 0; border-radius: 18px; background: var(--card); padding: 10px 4px 8px;
-  display: grid; justify-items: center; gap: 2px; font-weight: 900; font-size: 15px;
-  box-shadow: 0 3px 0 var(--line); transition: transform .1s;
-}
+.actions { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding-top: 8px; padding-bottom: 8px; background: var(--sky2); }
+.act { position: relative; border: 0; border-radius: 14px; background: var(--card); padding: 6px 2px 5px; display: grid; justify-items: center; gap: 1px; font-weight: 900; font-size: 11px; box-shadow: 0 3px 0 var(--line); min-width: 0; white-space: nowrap; }
 .act:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
-.act svg { width: 34px; height: 34px; }
-.act .badge {
-  position: absolute; top: 6px; right: 8px; min-width: 22px; padding: 1px 6px; border-radius: 11px;
-  background: var(--coral); color: #fff; font-size: 12px; font-variant-numeric: tabular-nums;
-}
+.act svg { width: 26px; height: 26px; }
+.act.on { background: #e3f6f3; box-shadow: 0 3px 0 var(--mint); }
+.act .badge { position: absolute; top: 3px; right: 4px; min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--coral); color: #fff; font-size: 10px; font-variant-numeric: tabular-nums; }
 .act .badge.zero { background: var(--line); color: var(--soft); }
+.empty-room { position: absolute; inset: 0; display: grid; place-items: center; z-index: 3; pointer-events: none; }
+.empty-room div { background: var(--card); border-radius: 18px; padding: 14px 18px; text-align: center; font-weight: 700; line-height: 1.7; font-size: 14px; pointer-events: auto; max-width: calc(100% - 40px); }
+.empty-room button { margin-top: 8px; border: 0; border-radius: 999px; background: var(--coral); color: #fff; font-weight: 900; padding: 8px 18px; }
 
-/* ---------- 共通：サブ画面（畑・釣り・図鑑） ---------- */
-.sub {
-  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
-  display: flex; flex-direction: column; gap: 12px;
-}
-.sub h2 { margin: 0; font-size: 22px; font-weight: 900; }
+/* ---------- サブ画面 ---------- */
+.sub { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-top: 14px; padding-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sub h2 { margin: 0; font-size: 22px; font-weight: 900; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sub h2 .coins { font-size: 15px; background: var(--card); }
 .sub .lead { margin: -6px 0 0; font-size: 13px; color: var(--soft); line-height: 1.6; }
-.stock {
-  display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 8px 12px;
-  font-weight: 700; font-size: 14px;
-}
-.stock svg { width: 28px; height: 28px; flex: none; }
-.stock b { font-size: 20px; font-variant-numeric: tabular-nums; margin-left: auto; }
-
-/* 畑 */
+.stock { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: flex; align-items: center; gap: 4px; background: var(--card); border-radius: 999px; padding: 3px 10px 3px 4px; font-weight: 700; font-size: 12px; }
+.chip svg { width: 22px; height: 22px; }
+.chip b { font-variant-numeric: tabular-nums; }
 #farm { background: linear-gradient(180deg, var(--sky) 0%, #e3f1d2 40%); }
 .plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.plot {
-  border: 0; border-radius: 16px; background: #a9764e; aspect-ratio: 1 / 1.15; max-width: 100%;
-  display: grid; grid-template-rows: 1fr auto; justify-items: center; padding: 8px 4px 6px;
-  box-shadow: inset 0 -6px 0 #8c5f3c; color: #fff; min-width: 0;
-}
-.plot svg { width: 72%; height: auto; align-self: end; }
-.plot small { font-size: 12px; font-weight: 700; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.plot { border: 0; border-radius: 16px; background: #a9764e; aspect-ratio: 1 / 1.15; max-width: 100%; display: grid; grid-template-rows: 1fr auto; justify-items: center; padding: 8px 4px 6px; box-shadow: inset 0 -6px 0 #8c5f3c; color: #fff; min-width: 0; }
+.plot svg { width: 66%; height: auto; align-self: end; }
+.plot small { font-size: 11px; font-weight: 700; line-height: 1.3; font-variant-numeric: tabular-nums; text-align: center; }
 .plot.ready { background: #b98557; box-shadow: inset 0 -6px 0 #8c5f3c, 0 0 0 3px var(--gold); }
-.water {
-  border: 0; border-radius: 999px; background: var(--sea); color: #fff; font-weight: 900; font-size: 12px;
-  padding: 2px 10px; margin-top: 2px;
-}
+.water { border-radius: 999px; background: var(--sea); color: #fff; font-weight: 900; font-size: 11px; padding: 1px 9px; margin-top: 2px; }
 .note { font-size: 12px; color: var(--soft); line-height: 1.6; margin: 0; }
-
-/* 釣り */
 #fish { background: linear-gradient(180deg, var(--sky) 0%, #d5ecf7 40%); }
-.fishwrap { position: relative; border-radius: 18px; overflow: hidden; background: #8fd0ef; aspect-ratio: 4 / 5; max-height: 52vh; width: 100%; touch-action: manipulation; }
+.fishwrap { position: relative; border-radius: 18px; overflow: hidden; background: #8fd0ef; aspect-ratio: 4 / 4.4; max-height: 48vh; width: 100%; touch-action: manipulation; }
 .fishwrap canvas { display: block; width: 100%; height: 100%; }
-.bigbtn {
-  border: 0; border-radius: 18px; background: var(--coral); color: #fff; font-weight: 900; font-size: 20px;
-  padding: 14px; box-shadow: 0 4px 0 #c96a52; letter-spacing: .06em;
-}
+.bigbtn { border: 0; border-radius: 18px; background: var(--coral); color: #fff; font-weight: 900; font-size: 19px; padding: 13px; box-shadow: 0 4px 0 #c96a52; letter-spacing: .06em; }
 .bigbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c96a52; }
+.easy { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--soft); align-self: center; }
+.easy input { width: 18px; height: 18px; accent-color: var(--coral); }
+
+/* お店 */
+#shop { background: linear-gradient(180deg, var(--sky) 0%, #fbeee2 40%); }
+.sec { display: grid; gap: 6px; }
+.sec h3 { margin: 4px 0 0; font-size: 14px; font-weight: 900; color: var(--soft); letter-spacing: .06em; }
+.row { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 14px; padding: 8px 10px; min-width: 0; }
+.row .ic { width: 36px; height: 36px; flex: none; display: grid; place-items: center; }
+.row .ic svg { width: 34px; height: 34px; }
+.row .nm { flex: 1; min-width: 0; font-weight: 700; font-size: 14px; line-height: 1.35; }
+.row .nm small { display: block; font-size: 11px; color: var(--soft); font-weight: 500; }
+.row .btns { display: flex; gap: 6px; flex: none; }
+.row button { border: 0; border-radius: 999px; background: var(--coral); color: #fff; font-weight: 900; font-size: 12px; padding: 6px 11px; white-space: nowrap; }
+.row button.sub2 { background: var(--line); color: var(--ink); }
+.row button:disabled { background: var(--line); color: var(--soft); }
+.row.locked { opacity: .55; }
+.empty { font-size: 13px; color: var(--soft); text-align: center; padding: 10px; background: rgba(255,255,255,.6); border-radius: 12px; }
 
 /* 図鑑 */
 .zgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.zcard { background: var(--card); border-radius: 16px; padding: 12px; display: grid; gap: 6px; min-width: 0; }
-.zcard b { font-size: 17px; font-weight: 900; }
+.zcard { background: var(--card); border-radius: 16px; padding: 12px; display: grid; gap: 6px; min-width: 0; align-content: start; }
+.zcard b { font-size: 16px; font-weight: 900; }
 .zcard p { margin: 0; font-size: 12px; color: var(--soft); line-height: 1.6; }
 .zstages { display: flex; gap: 4px; flex-wrap: wrap; }
 .zstages span { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--soft); }
 .zstages span.got { background: #fde3db; color: #b8513a; }
 .zcard.lock { background: rgba(255,255,255,.5); border: 2px dashed var(--line); }
 .zcard.lock b { color: var(--soft); }
-.zface { height: 64px; display: grid; place-items: center; }
-.zface svg { height: 60px; width: auto; }
+.zface { height: 60px; display: grid; place-items: center; }
+.zface svg { height: 56px; width: auto; }
 .reset { align-self: center; border: 0; background: transparent; color: var(--soft); font-size: 12px; text-decoration: underline; padding: 8px; }
 .confirm { background: var(--card); border-radius: 14px; padding: 12px; display: grid; gap: 8px; text-align: center; font-size: 13px; font-weight: 700; }
 .confirm div { display: flex; gap: 8px; justify-content: center; }
 .confirm button { border: 0; border-radius: 999px; padding: 6px 16px; font-weight: 700; background: var(--line); }
 .confirm button.danger { background: var(--coral); color: #fff; }
 
-/* ---------- 下のタブ ---------- */
-.tabs {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--card);
-  border-top: 1px solid var(--line);
-  padding: 4px max(8px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
-}
-.tab { border: 0; background: transparent; display: grid; justify-items: center; gap: 1px; padding: 6px 0; font-size: 12px; font-weight: 700; color: var(--soft); border-radius: 12px; }
-.tab svg { width: 26px; height: 26px; }
-.tab[aria-selected="true"] { color: var(--coral); background: #fdeee9; }
+/* 下から出るシート（種えらび・きせかえ・もようがえ・なまえ） */
+.sheet-bg { position: fixed; inset: 0; background: rgba(40,36,60,.35); z-index: 40; display: flex; align-items: flex-end; }
+.sheet { width: 100%; max-height: 78%; overflow-y: auto; background: var(--sky2); border-radius: 22px 22px 0 0; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 10px; }
+.sheet h3 { margin: 0; font-size: 18px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; }
+.sheet h3 button { border: 0; background: var(--line); border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 700; }
+.grid2 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pick { border: 2px solid transparent; background: var(--card); border-radius: 14px; padding: 8px 4px; display: grid; justify-items: center; gap: 2px; font-size: 11px; font-weight: 700; min-width: 0; line-height: 1.3; text-align: center; }
+.pick svg { width: 34px; height: 34px; }
+.pick.on { border-color: var(--coral); background: #fff4f0; }
+.pick small { color: var(--soft); font-weight: 500; }
+.slotlabel { font-size: 12px; font-weight: 900; color: var(--soft); margin: 4px 0 -4px; }
+.namein { font: inherit; font-size: 18px; font-weight: 700; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); width: 100%; }
+.okbtn { border: 0; border-radius: 999px; background: var(--coral); color: #fff; font-weight: 900; padding: 10px; font-size: 16px; }
 
-@media (prefers-reduced-motion: reduce) { .heart, .levelup { animation-duration: .01s; } }
+/* 下のタブ */
+.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); background: var(--card); border-top: 1px solid var(--line); padding: 4px max(6px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+.tab { border: 0; background: transparent; display: grid; justify-items: center; gap: 1px; padding: 5px 0; font-size: 11px; font-weight: 700; color: var(--soft); border-radius: 12px; }
+.tab svg { width: 24px; height: 24px; }
+.tab[aria-selected="true"] { color: var(--coral); background: #fdeee9; }
+#toast { position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 50; transition: opacity .3s; pointer-events: none; max-width: calc(100% - 32px); text-align: center; opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .heart, .spark, .levelup, .zzz { animation-duration: .01s; } }
 </style>
 </head>
 <body>
@@ -188,56 +172,78 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 
   <!-- ===== おせわ ===== -->
   <section class="panel" id="care" role="tabpanel">
-    <div class="care-top">
+    <div class="care-top gut">
       <div class="switcher">
         <button class="arrow" id="prevA" type="button" aria-label="前の動物">‹</button>
-        <div class="who"><b id="aName">うさぎ</b><small id="aStage">あかちゃん</small></div>
+        <button class="who" id="whoBtn" type="button" aria-label="なまえをかえる"><b id="aName">-</b><small id="aStage"></small></button>
         <button class="arrow" id="nextA" type="button" aria-label="次の動物">›</button>
       </div>
-      <div class="stats">
+      <div class="stats" id="statsRow">
         <div class="stat"><span>おなか<em id="vHun">0</em></span><div class="meter hun"><i id="mHun"></i></div></div>
         <div class="stat"><span>なかよし<em id="vBond">0</em></span><div class="meter bond"><i id="mBond"></i></div></div>
         <div class="stat"><span>げんき<em id="vEng">0</em></span><div class="meter eng"><i id="mEng"></i></div></div>
+        <div class="stat"><span>きれい<em id="vCln">0</em></span><div class="meter cln"><i id="mCln"></i></div></div>
+      </div>
+      <div class="infobar">
+        <div class="lv" id="lvChip">Lv1</div>
+        <div class="quest" id="quest"></div>
+        <div class="coins"><span class="cicon"></span><span class="coinv">0</span></div>
       </div>
     </div>
     <div class="stage" id="stage">
+      <div class="nightveil" id="veil" style="opacity:0"></div>
       <div class="bubble off" id="bubble"></div>
       <div class="fx" id="fx"></div>
+      <div class="away" id="awayBox" hidden></div>
+      <div class="empty-room" id="emptyRoom" hidden><div>まだ動物がいないよ。<br>はたけとつりでお金をためて、<br>おみせでおむかえしよう！<br><button type="button" id="goShop">おみせへ</button></div></div>
     </div>
-    <div class="actions">
+    <div class="actions gut" id="actions">
       <button class="act" id="btnFeed" type="button"><span class="badge" id="foodBadge">0</span><span id="feedIcon"></span><span>ごはん</span></button>
-      <button class="act" id="btnPet" type="button"><span id="petIcon"></span><span>なでる</span></button>
-      <button class="act" id="btnPlay" type="button"><span id="playIcon"></span><span>あそぶ</span></button>
+      <button class="act" id="btnTreat" type="button"><span class="badge" id="treatBadge">0</span><span data-icon="cookie"></span><span>おやつ</span></button>
+      <button class="act" id="btnPet" type="button"><span data-icon="pet"></span><span>なでる</span></button>
+      <button class="act" id="btnBrush" type="button"><span data-icon="brush"></span><span>ブラシ</span></button>
+      <button class="act" id="btnPlay" type="button"><span data-icon="ball"></span><span>あそぶ</span></button>
+      <button class="act" id="btnWalk" type="button"><span data-icon="walk"></span><span>おさんぽ</span></button>
+      <button class="act" id="btnSleep" type="button"><span data-icon="moon"></span><span id="sleepLabel">ねかせる</span></button>
+      <button class="act" id="btnTrick" type="button"><span data-icon="star"></span><span>げい</span></button>
+      <button class="act" id="btnWear" type="button"><span data-icon="hanger"></span><span>きせかえ</span></button>
+      <button class="act" id="btnDecor" type="button"><span data-icon="sofa"></span><span>もようがえ</span></button>
     </div>
   </section>
 
   <!-- ===== 畑 ===== -->
   <section class="panel" id="farm" role="tabpanel" hidden>
-    <div class="sub">
-      <h2>はたけ</h2>
-      <p class="lead">たねをまいて、にんじんを育てよう。水をあげると早く育つよ。</p>
-      <div class="stock"><span id="carrotIcon"></span>にんじん<b id="carrotCount">0</b></div>
+    <div class="sub gut">
+      <h2>はたけ<span class="coins"><span class="cicon"></span><span class="coinv">0</span></span></h2>
+      <p class="lead">たねをまいて育てよう。水をあげると早く育つよ。とれた野菜は、ごはんにしたり、おみせで売ったりできます。</p>
+      <div class="stock" id="cropStock"></div>
       <div class="plots" id="plots"></div>
-      <p class="note">アプリを閉じていても、時間がたてば育ちます。</p>
+      <p class="note">アプリを閉じていても、時間がたてば育ちます。新しいたねは、おせわレベルが上がるとおみせに並びます。</p>
     </div>
   </section>
 
   <!-- ===== 釣り ===== -->
   <section class="panel" id="fish" role="tabpanel" hidden>
-    <div class="sub">
-      <h2>つり</h2>
-      <p class="lead">うきが沈んだら、すばやくタップ！ そのあと、ゲージが黄色に入ったところでもう一度タップ。</p>
-      <div class="stock"><span id="fishIcon"></span>さかな<b id="fishCount">0</b></div>
+    <div class="sub gut">
+      <h2>つり<span class="coins"><span class="cicon"></span><span class="coinv">0</span></span></h2>
+      <p class="lead">うきが沈んだらタップ！ つぎに、ゲージが黄色に入ったところでもう一度タップ。大物ほど黄色がせまいよ。</p>
+      <div class="stock" id="fishStock"></div>
       <div class="fishwrap" id="fishWrap"><canvas id="fishCanvas"></canvas></div>
       <button class="bigbtn" id="fishBtn" type="button">つりざおを なげる</button>
+      <label class="easy"><input type="checkbox" id="easyMode">かんたんモード（ゲージがゆっくり・黄色が広い）</label>
     </div>
+  </section>
+
+  <!-- ===== お店 ===== -->
+  <section class="panel" id="shop" role="tabpanel" hidden>
+    <div class="sub gut" id="shopBody"></div>
   </section>
 
   <!-- ===== 図鑑 ===== -->
   <section class="panel" id="zukan" role="tabpanel" hidden>
-    <div class="sub">
+    <div class="sub gut">
       <h2>ずかん</h2>
-      <p class="lead">育てた動物と、見られた成長のすがたが記録されます。</p>
+      <p class="lead">おむかえした動物と、見られた成長のすがたが記録されます。</p>
       <div class="zgrid" id="zgrid"></div>
       <button class="reset" id="resetBtn" type="button">データをはじめからにする</button>
       <div class="confirm" id="resetConfirm" hidden>
@@ -251,9 +257,11 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
     <button class="tab" role="tab" data-tab="care" aria-selected="true" type="button"><span data-icon="heart"></span>おせわ</button>
     <button class="tab" role="tab" data-tab="farm" aria-selected="false" type="button"><span data-icon="sprout"></span>はたけ</button>
     <button class="tab" role="tab" data-tab="fish" aria-selected="false" type="button"><span data-icon="rod"></span>つり</button>
+    <button class="tab" role="tab" data-tab="shop" aria-selected="false" type="button"><span data-icon="bag"></span>おみせ</button>
     <button class="tab" role="tab" data-tab="zukan" aria-selected="false" type="button"><span data-icon="book"></span>ずかん</button>
   </nav>
 </div>
+<div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -262,230 +270,382 @@ button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
    どうぶつのともだち（仮）
    ---------------------------------------------------------------------
    【構成】
-     1. CONFIG    … 数値の減り方・成長の目安など（ゲームバランスはここで調整）
-     2. ICONS     … 画面で使う小さな絵（SVG）
-     3. SPECIES   … 動物の種類。ここに1つ足せば動物が増える
-                    glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示
-     4. Save      … データの保存（スマホのブラウザに保存）
-     5. Stage3D   … 3D表示と動き
-     6. Care      … おせわ画面
-     7. Farm      … はたけ
-     8. Fishing   … つり
-     9. Zukan     … ずかん
-    10. 起動
+     1. CONFIG     … 数値の減り方・時間・レベルなど（ゲームバランスはここ）
+     2. ICONS      … 画面の小さな絵（SVG）
+     3. カタログ    … ITEMS(野菜・魚・おやつ) / CROPS(たね) / FISHES / DECOR(家具) / WEAR(きせかえ) / SPECIES(動物)
+                     ここに1行足すと、お店・図鑑・はたけ・つりに自動で出ます
+     4. Save       … データの保存（スマホのブラウザに保存）
+     5. 3Dの見た目  … 動物・家具・きせかえの形
+     6. Room3D     … お部屋の3D表示と動き
+     7. Care       … おせわ画面
+     8. Farm / Fishing / Shop / Zukan / Quest
+     9. 起動
    ===================================================================== */
 
 /* ---------- 1. CONFIG ---------- */
 const CONFIG = {
-  // 1時間あたりの変化（閉じていた間もこの割合で計算）
-  hungerPerHour: -10,     // おなかの減り方
-  energyPerHour: +12,     // げんきの回復（休んでいると戻る）
-  bondPerHourWhenHungry: -3, // おなかが30より少ない間だけ、なかよしが減る
-  maxAwayHours: 72,       // これ以上の時間は数えない（長く放っておいても極端にならない）
-
-  feed: { hunger: +30, bond: +3, energy: +5, care: 3 },
-  play: { hunger: -6, bond: +8, energy: -18, care: 3, needEnergy: 18 },
-  pet:  { bond: +2, care: 1, every: 0.5, maxCarePerHour: 6 }, // なでて0.5秒ごとに+2
-
-  // 成長：おせわポイントがこの数に届くと次の段階へ
+  hungerPerHour: -10, energyPerHour: +12, sleepEnergyPerHour: +35, cleanPerHour: -5,
+  bondPerHourWhenHungry: -3, maxAwayHours: 72,
+  feed:  { hunger: +30, bond: +3, energy: +5, xp: 3 },
+  treat: { hunger: +8, bond: +12, xp: 4 },
+  play:  { hunger: -6, bond: +8, energy: -18, clean: -6, xp: 3, needEnergy: 18, toyBonus: 4 },
+  pet:   { bond: +2, xpPerHour: 6 },
+  brush: { clean: +5, bond: +1, xpPerHour: 6 },
+  trick: { bond: +4, energy: -6, xp: 2, needEnergy: 8 },
+  walkMinutes: 3,       // おさんぽから帰るまで（分）
+  walk: { energy: -15, hunger: -8, bond: +6, xp: 5, needEnergy: 20 },
+  // 動物の成長（その動物のおせわポイント）
   stages: [
     { name: "あかちゃん", care: 0,   scale: .72, head: 1.22 },
     { name: "こども",     care: 25,  scale: .86, head: 1.1 },
     { name: "おとな",     care: 80,  scale: 1.0, head: 1.0 },
   ],
-
-  // はたけ
-  plots: 6,
-  growSeconds: 120,       // にんじんが育つまでの秒数
-  waterCut: 0.5,          // 水やりで残り時間がこの割合になる（1回だけ）
-
-  // つり
-  biteWait: [1.5, 4.0],   // うきが沈むまでの秒数（この間でランダム）
-  biteWindow: 1.0,        // 沈んでからタップできる秒数
+  // おせわレベル（全部の動物のお世話でたまる）。この数に届くと次のレベル
+  levels: [0, 15, 40, 80, 140, 220, 320, 450, 600, 800],
+  plots: 6, waterCut: 0.5,
+  biteWait: [1.5, 4.0], biteWindow: 1.0,
+  startCoins: 20,
 };
 
-/* ---------- 2. ICONS（小さな絵） ---------- */
+/* ---------- 2. ICONS ---------- */
+const fishSVG = (c, s = "#24324a") => `<svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-6l8-6v24l-8-6C24 36 12 33 6 24z" fill="${c}"/><path d="M22 18c3 3 3 9 0 12" stroke="rgba(0,0,0,.2)" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="22" r="2.2" fill="${s}"/></svg>`;
+const dotSVG = (c, c2 = "#fff") => `<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="${c}"/><circle cx="18" cy="18" r="5" fill="${c2}" opacity=".5"/></svg>`;
 const ICONS = {
   carrot: '<svg viewBox="0 0 48 48"><path d="M24 14c6 0 9 4 8 9l-6 20c-.6 2-3.4 2-4 0L16 23c-1-5 2-9 8-9z" fill="#f28a2e"/><path d="M19 22h6M21 29h5M22 35h3" stroke="#d26b18" stroke-width="2" stroke-linecap="round"/><path d="M24 15c-1-5-5-9-9-9 2 3 4 6 9 9zm0 0c0-5 1-10 4-12-.5 4 0 8-4 12zm0 0c3-4 7-6 11-5-3 2-6 4-11 5z" fill="#5fae5c"/></svg>',
-  fish: '<svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-6l8-6v24l-8-6C24 36 12 33 6 24z" fill="#5aa9e0"/><path d="M22 18c3 3 3 9 0 12" stroke="#3d86bf" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="22" r="2.2" fill="#24324a"/></svg>',
+  sunseed: '<svg viewBox="0 0 48 48"><ellipse cx="17" cy="26" rx="6" ry="11" transform="rotate(-20 17 26)" fill="#4a4038"/><ellipse cx="31" cy="24" rx="6" ry="11" transform="rotate(18 31 24)" fill="#4a4038"/><path d="M15 18l3 16M31 16l-3 16" stroke="#e8e0d0" stroke-width="2" stroke-linecap="round"/></svg>',
+  strawberry: '<svg viewBox="0 0 48 48"><path d="M24 42c-10-6-14-14-12-21 2-6 8-7 12-5 4-2 10-1 12 5 2 7-2 15-12 21z" fill="#e8394a"/><g fill="#ffe28a"><circle cx="19" cy="24" r="1.3"/><circle cx="27" cy="23" r="1.3"/><circle cx="23" cy="30" r="1.3"/><circle cx="30" cy="30" r="1.3"/><circle cx="18" cy="31" r="1.3"/></g><path d="M24 16c-4-4-8-3-10-2 3 2 6 3 10 2zm0 0c4-4 8-3 10-2-3 2-6 3-10 2zm0 0V9" stroke="#3f9a4a" stroke-width="2.5" fill="#5fae5c" stroke-linecap="round"/></svg>',
+  pumpkin: '<svg viewBox="0 0 48 48"><ellipse cx="24" cy="28" rx="17" ry="13" fill="#f29a3a"/><path d="M24 15v26M15 17c-4 6-4 16 0 22M33 17c4 6 4 16 0 22" stroke="#d47a1e" stroke-width="2" fill="none"/><path d="M24 16c0-4 2-7 5-8" stroke="#5a8a3a" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',
+  iwashi: fishSVG("#9fbfd6"), aji: fishSVG("#d4bb83"), saba: fishSVG("#5d8fb0"), tai: fishSVG("#f08a8a"),
+  cookie: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="#e2b06a"/><g fill="#6b4226"><circle cx="18" cy="19" r="2.4"/><circle cx="29" cy="17" r="2"/><circle cx="27" cy="29" r="2.6"/><circle cx="17" cy="30" r="1.8"/></g></svg>',
+  coin: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18" fill="#f6c453"/><circle cx="24" cy="24" r="13" fill="none" stroke="#e0a93a" stroke-width="2.5"/><path d="M24 15v18M19 19h7a3 3 0 010 6h-5a3 3 0 000 6h7" stroke="#b07a10" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>',
   pet: '<svg viewBox="0 0 48 48"><path d="M14 30V16a3 3 0 016 0v10V12a3 3 0 016 0v14V14a3 3 0 016 0v14-8a3 3 0 016 0v12c0 8-6 13-13 13h-1c-5 0-8-2-11-6l-6-8a3 3 0 015-3z" fill="#ffd9c4" stroke="#d99a7d" stroke-width="2" stroke-linejoin="round"/></svg>',
   ball: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="#f6c453"/><path d="M8 20c10 4 22 4 32 0M10 31c9-3 19-3 28 0" stroke="#f2876b" stroke-width="3" fill="none"/></svg>',
+  brush: '<svg viewBox="0 0 48 48"><rect x="8" y="10" width="24" height="12" rx="5" fill="#f2876b"/><path d="M11 22v8M15 22v9M19 22v9M23 22v9M27 22v8" stroke="#8a7c6c" stroke-width="2" stroke-linecap="round"/><path d="M32 15h7a3 3 0 010 6h-7" fill="#c96a52"/></svg>',
+  walk: '<svg viewBox="0 0 48 48"><g fill="#a07a5a"><ellipse cx="16" cy="30" rx="6" ry="7"/><circle cx="9" cy="21" r="2.6"/><circle cx="14" cy="17" r="2.6"/><circle cx="20" cy="17" r="2.6"/><circle cx="24" cy="21" r="2.6"/><ellipse cx="33" cy="18" rx="5" ry="6"/><circle cx="27" cy="10" r="2.2"/><circle cx="31" cy="7" r="2.2"/><circle cx="36" cy="7" r="2.2"/><circle cx="40" cy="10" r="2.2"/></g></svg>',
+  moon: '<svg viewBox="0 0 48 48"><path d="M30 8a17 17 0 100 32A14 14 0 0130 8z" fill="#7b7fc9"/><circle cx="36" cy="14" r="2" fill="#f6c453"/><circle cx="40" cy="24" r="1.5" fill="#f6c453"/></svg>',
+  star: '<svg viewBox="0 0 48 48"><path d="M24 6l5 11 12 1-9 8 3 12-11-6-11 6 3-12-9-8 12-1z" fill="#f6c453" stroke="#e0a93a" stroke-width="2" stroke-linejoin="round"/></svg>',
+  hanger: '<svg viewBox="0 0 48 48"><path d="M24 14a4 4 0 114 4c-2 1-4 2-4 5L7 33a2 2 0 001 3h32a2 2 0 001-3L24 23" stroke="#7d7796" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 36c2-5 14-5 16 0" fill="#f47b9b"/></svg>',
+  sofa: '<svg viewBox="0 0 48 48"><rect x="10" y="14" width="28" height="14" rx="5" fill="#7fcfc4"/><rect x="5" y="22" width="38" height="12" rx="5" fill="#5fb8ad"/><path d="M10 34v5M38 34v5" stroke="#8a6a50" stroke-width="3" stroke-linecap="round"/></svg>',
   heart: '<svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 18a9 9 0 0117-4 9 9 0 0117 4c0 12-17 22-17 22z" fill="currentColor"/></svg>',
   heartPink: '<svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 18a9 9 0 0117-4 9 9 0 0117 4c0 12-17 22-17 22z" fill="#f47b9b"/></svg>',
+  bubble: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="16" fill="rgba(255,255,255,.75)" stroke="#9fd7ef" stroke-width="2"/><circle cx="18" cy="18" r="4" fill="#fff"/></svg>',
   sprout: '<svg viewBox="0 0 48 48"><path d="M24 40V24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M24 26c-2-8-8-11-15-10 1 7 7 11 15 10zm0-4c1-8 7-12 15-12-1 8-7 12-15 12z" fill="currentColor"/></svg>',
   rod: '<svg viewBox="0 0 48 48"><path d="M8 42L36 8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M36 8c4 8 5 16 4 24" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="40" cy="34" r="4" fill="currentColor"/></svg>',
+  bag: '<svg viewBox="0 0 48 48"><path d="M10 16h28l-2 24H12z" fill="currentColor"/><path d="M17 20v-6a7 7 0 0114 0v6" stroke="currentColor" stroke-width="3" fill="none"/></svg>',
   book: '<svg viewBox="0 0 48 48"><path d="M8 10c6-2 11-1 16 3v27c-5-4-10-5-16-3zm32 0c-6-2-11-1-16 3v27c5-4 10-5 16-3z" fill="currentColor"/></svg>',
-  // 畑の育ち具合
+  seedbag: (c) => `<svg viewBox="0 0 48 48"><path d="M12 12h24l2 28H10z" fill="#e8d5b5"/><path d="M12 12l3-4h18l3 4" fill="#d4bc94"/><circle cx="24" cy="27" r="8" fill="${c}"/></svg>`,
   plot0: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="32" rx="16" ry="5" fill="#8c5f3c"/></svg>',
   plot1: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="34" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34v-8" stroke="#5fae5c" stroke-width="3" stroke-linecap="round"/><path d="M24 28c-3-4-7-5-10-4 2 4 6 5 10 4zm0-1c2-4 6-6 10-5-2 4-6 6-10 5z" fill="#6fbf73"/></svg>',
   plot2: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="35" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34c-1-10-6-16-12-18 1 7 6 14 12 18zm0 0c0-10 3-19 8-22 1 8-2 16-8 22zm0 0c3-8 9-12 15-11-2 6-8 10-15 11z" fill="#5fae5c"/></svg>',
-  plot3: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="36" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 26c-1-9-6-15-12-17 1 7 6 13 12 17zm0 0c0-9 3-17 8-20 1 7-2 14-8 20zm0 0c3-7 9-11 15-10-2 6-8 9-15 10z" fill="#5fae5c"/><path d="M18 30c0-4 3-6 6-6s6 2 6 6c0 3-3 6-6 6s-6-3-6-6z" fill="#f28a2e"/></svg>',
 };
-const icon = (name, cls = "") => `<span class="${cls}" aria-hidden="true">${ICONS[name]}</span>`;
+const iconOf = (key) => typeof ICONS[key] === "string" ? ICONS[key] : "";
 
-/* ---------- 3. SPECIES（動物の種類） ----------
-   新しい動物を増やすとき：
-     ① ここに1つ書き足す（id は英数字）
-     ② build に見た目を作る関数を書く（後で3Dモデルにするなら glb にファイル名を書くだけ）
-   glb: "models/usagi.glb" のように書くと、そのモデルが表示されます（同じリポジトリに置く）。
-        モデルの時は「全身の動き」だけになります（耳だけ動く、まばたき等は作った見た目の時だけ）。 */
+/* ---------- 3. カタログ ---------- */
+// 野菜・魚・おやつ（持ち物）。price＝売るときの値段
+const ITEMS = {
+  carrot:     { name: "にんじん",       kind: "crop", price: 5 },
+  sunseed:    { name: "ひまわりのたね", kind: "crop", price: 7 },
+  strawberry: { name: "いちご",         kind: "crop", price: 14 },
+  pumpkin:    { name: "かぼちゃ",       kind: "crop", price: 40 },
+  iwashi:     { name: "いわし",         kind: "fish", price: 6 },
+  aji:        { name: "あじ",           kind: "fish", price: 10 },
+  saba:       { name: "さば",           kind: "fish", price: 18 },
+  tai:        { name: "たい",           kind: "fish", price: 50 },
+  cookie:     { name: "クッキー",       kind: "treat", price: 0 },
+};
+// たね。level＝お店に並ぶおせわレベル、seedPrice＝たねの値段（0は無料でまける）
+const CROPS = {
+  carrot:     { item: "carrot",     seconds: 120, seedPrice: 0,  level: 1, yield: [1, 2], color: "#f28a2e" },
+  sunflower:  { item: "sunseed",    seconds: 150, seedPrice: 6,  level: 2, yield: [2, 3], color: "#f6c453", name: "ひまわり" },
+  strawberry: { item: "strawberry", seconds: 240, seedPrice: 12, level: 3, yield: [1, 2], color: "#e8394a" },
+  pumpkin:    { item: "pumpkin",    seconds: 420, seedPrice: 25, level: 5, yield: [1, 1], color: "#f29a3a" },
+};
+// 魚。weight＝釣れやすさ、zone＝ゲージの黄色の広さ、speed＝ゲージの速さ
+const FISHES = {
+  iwashi: { weight: 50, zone: .24, speed: 1.0 },
+  aji:    { weight: 30, zone: .2,  speed: 1.2 },
+  saba:   { weight: 15, zone: .16, speed: 1.4 },
+  tai:    { weight: 5,  zone: .11, speed: 1.7 },
+};
+// 家具・かざり。slot＝置ける場所(floor/wall/rug)、shop＝お店の値段(nullは非売品＝おさんぽで拾える)、toy＝あそぶ時にうれしい
+const DECOR = {
+  plant:   { name: "かんようしょくぶつ", slot: "floor", shop: null, color: "#5fae5c" },
+  lamp:    { name: "スタンドライト",     slot: "floor", shop: null, color: "#f6c453" },
+  cushion: { name: "クッション",         slot: "floor", shop: null, color: "#f4a6b6" },
+  vase:    { name: "おはなのかびん",     slot: "floor", shop: null, color: "#9fc6ef" },
+  shelf:   { name: "ちいさなたな",       slot: "floor", shop: null, color: "#c9976a" },
+  picture: { name: "おはなの絵",         slot: "wall",  shop: null, color: "#f2c0a0" },
+  clock:   { name: "かべどけい",         slot: "wall",  shop: null, color: "#fbf8f1" },
+  garland: { name: "ガーランド",         slot: "wall",  shop: null, color: "#f2876b" },
+  rugRound:{ name: "まるいラグ",         slot: "rug",   shop: null, color: "#f6d9a8" },
+  rugStar: { name: "ほしのラグ",         slot: "rug",   shop: null, color: "#c8c2f2" },
+  ball:    { name: "ボール",             slot: "floor", shop: 30, toy: true, level: 1, color: "#f6c453" },
+  blocks:  { name: "つみき",             slot: "floor", shop: 45, toy: true, level: 2, color: "#7fcfc4" },
+  bear:    { name: "くまのぬいぐるみ",   slot: "floor", shop: 80, toy: true, level: 4, color: "#c9976a" },
+};
+// きせかえ（頭の上にのせる）
+const WEAR = {
+  ribbon: { name: "リボン",         price: 40,  level: 2, color: "#f47b9b" },
+  hat:    { name: "ちいさなぼうし", price: 60,  level: 3, color: "#7b7fc9" },
+  flower: { name: "はなかんむり",   price: 70,  level: 4, color: "#f6c453" },
+  crown:  { name: "おうかん",       price: 150, level: 6, color: "#f2c13a" },
+};
+// 動物。foods＝食べるもの（前のものから順に使う）、price/level＝おむかえの値段とおせわレベル
+//   glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示（その時は全身の動きだけ）
 const SPECIES = {
-  usagi: {
-    name: "うさぎ", food: "carrot", foodName: "にんじん", foodWhere: "farm",
-    desc: "たれ耳のふわふわうさぎ。にんじんが大好き。",
-    glb: null,          // TODO: Meshyなどで作ったモデルに差し替えるときはここにファイル名
-    glbScale: 1,        // モデルの大きさ調整
-    build: buildRabbit,
-  },
-  pengin: {
-    name: "ペンギン", food: "fish", foodName: "さかな", foodWhere: "fish",
-    desc: "よちよち歩きのペンギン。おさかなをあげると喜ぶよ。",
-    glb: null,
-    glbScale: 1,
-    build: buildPenguin,
-  },
+  usagi:   { name: "うさぎ",     price: 40,  level: 1, foods: ["carrot", "strawberry", "pumpkin"], desc: "たれ耳のふわふわうさぎ。にんじんが大好き。", glb: null, build: buildRabbit },
+  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: null, build: buildPenguin },
+  hamster: { name: "ハムスター", price: 160, level: 3, foods: ["sunseed", "strawberry", "pumpkin"], desc: "ほっぺがふくらむハムスター。ひまわりのたねが好き。", glb: null, build: buildHamster },
+  neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
 };
-// まだいない動物（図鑑の「？？？」の枠の数）
-const LOCKED_SLOTS = 2;
+const FUTURE_SLOTS = 1;   // 図鑑の「まだ見ぬなかま」の枠
 
-/* ---------- 4. Save（スマホのブラウザに保存） ---------- */
+/* ---------- 4. Save ---------- */
 const SAVE_KEY = "doubutsu-save-v1";
+const newAnimal = () => ({ owned: false, name: "", hunger: 70, bond: 10, energy: 80, clean: 80, care: 0, seen: [0], sleeping: false, walk: null, wear: null, xpHour: 0, petXp: 0, brushXp: 0, ticks: 0 });
 const Save = {
   data: null,
   fresh() {
     const animals = {};
-    for (const id of Object.keys(SPECIES)) animals[id] = { hunger: 70, bond: 10, energy: 80, care: 0, petCare: 0, petHour: 0, seen: [0] };
-    const plots = Array.from({ length: CONFIG.plots }, () => ({ state: "empty" }));
-    return { v: 1, current: "usagi", animals, items: { carrot: 2, fish: 2 }, plots, last: Date.now() };
+    for (const id of Object.keys(SPECIES)) animals[id] = newAnimal();
+    return { v: 2, current: null, coins: CONFIG.startCoins, xp: 0, animals,
+      items: { carrot: 2, iwashi: 1 }, seeds: {}, decor: {}, wear: [], room: {},
+      plots: Array.from({ length: CONFIG.plots }, () => ({ state: "empty" })),
+      quest: null, last: Date.now(), easy: false };
   },
   load() {
     let d = null;
     try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (_) {}
-    this.data = d && d.v === 1 ? d : this.fresh();
-    // あとから動物が増えても、古いデータに足す
+    if (d && d.v === 1) d = this.fromV1(d);
+    this.data = d && d.v === 2 ? d : this.fresh();
+    const f = this.fresh();
+    for (const k of Object.keys(f)) if (this.data[k] === undefined) this.data[k] = f[k];
     for (const id of Object.keys(SPECIES)) {
-      if (!this.data.animals[id]) this.data.animals[id] = { hunger: 70, bond: 10, energy: 80, care: 0, petCare: 0, petHour: 0, seen: [0] };
+      this.data.animals[id] = Object.assign(newAnimal(), this.data.animals[id] || {});
     }
-    if (!SPECIES[this.data.current]) this.data.current = Object.keys(SPECIES)[0];
     while (this.data.plots.length < CONFIG.plots) this.data.plots.push({ state: "empty" });
+    if (this.data.current && !this.data.animals[this.data.current]?.owned) this.data.current = null;
+    if (!this.data.current) this.data.current = ownedIds()[0] || null;
+  },
+  /** 最初の版のデータ（うさぎとペンギンがいる）を新しい形に引き継ぐ */
+  fromV1(o) {
+    const d = this.fresh();
+    let xp = 0;
+    for (const [id, a] of Object.entries(o.animals || {})) {
+      if (!d.animals[id]) continue;
+      Object.assign(d.animals[id], { owned: true, hunger: a.hunger, bond: a.bond, energy: a.energy, care: a.care, seen: a.seen || [0] });
+      xp += a.care || 0;
+    }
+    d.xp = xp; d.current = o.current || "usagi";
+    d.items = { carrot: o.items?.carrot || 0, iwashi: o.items?.fish || 0 };
+    d.plots = (o.plots || []).map((p) => p.state === "grow" ? { state: "grow", crop: "carrot", readyAt: p.readyAt, total: p.total, watered: p.watered } : { state: "empty" });
+    d.coins = 30; d.last = o.last || Date.now();
+    return d;
   },
   store() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.data)); } catch (_) {} },
   reset() { this.data = this.fresh(); this.store(); },
 };
+const D = () => Save.data;
 const clamp = (v) => Math.max(0, Math.min(100, v));
-function stageOf(a) { let s = 0; CONFIG.stages.forEach((st, i) => { if (a.care >= st.care) s = i; }); return s; }
+const ownedIds = () => Object.keys(SPECIES).filter((id) => Save.data.animals[id]?.owned);
+const stageOf = (a) => { let s = 0; CONFIG.stages.forEach((st, i) => { if (a.care >= st.care) s = i; }); return s; };
+const levelOf = (xp) => { let l = 1; CONFIG.levels.forEach((n, i) => { if (xp >= n) l = i + 1; }); return l; };
+const nameOf = (id) => D().animals[id].name || SPECIES[id].name;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pickWeighted = (obj, key) => { const e = Object.entries(obj); let t = e.reduce((s, [, v]) => s + v[key], 0) * Math.random(); for (const [k, v] of e) { t -= v[key]; if (t <= 0) return k; } return e[0][0]; };
 
 /** 前回から今までの時間ぶん、数値を進める。戻り値は経過時間（時間） */
 function applyTime() {
-  const d = Save.data, now = Date.now();
+  const d = D(), now = Date.now();
   const hours = Math.min(CONFIG.maxAwayHours, Math.max(0, (now - d.last) / 3600000));
   d.last = now;
   if (hours <= 0) return 0;
-  for (const id of Object.keys(d.animals)) {
-    const a = d.animals[id];
-    const before = a.hunger;
+  for (const id of ownedIds()) {
+    const a = d.animals[id], before = a.hunger;
     a.hunger = clamp(a.hunger + CONFIG.hungerPerHour * hours);
-    a.energy = clamp(a.energy + CONFIG.energyPerHour * hours);
-    // おなかが30を切っていた時間だけ、なかよしが減る
+    a.energy = clamp(a.energy + (a.sleeping ? CONFIG.sleepEnergyPerHour : CONFIG.energyPerHour) * hours);
+    a.clean = clamp(a.clean + CONFIG.cleanPerHour * hours);
     const hungryHours = before <= 30 ? hours : Math.max(0, hours - (before - 30) / -CONFIG.hungerPerHour);
     a.bond = clamp(a.bond + CONFIG.bondPerHourWhenHungry * hungryHours);
+    if (a.sleeping && a.energy >= 100) a.sleeping = false;   // 元気いっぱいになったら起きる
   }
   return hours;
 }
+/** おせわレベルの経験値を足す */
+function addXp(n) {
+  const before = levelOf(D().xp);
+  D().xp += n;
+  const after = levelOf(D().xp);
+  if (after > before) {
+    setTimeout(() => {
+      toast(`おせわレベルが ${after} になった！ おみせに新しいものが並んだよ`, 3200);
+      Room3D.celebrate(`おせわレベル\n${after}！`);
+    }, 600);
+  }
+}
 
-/* ---------- 5. Stage3D（3D表示と動き） ---------- */
+/* ---------- 5. 3Dの見た目 ---------- */
 const M = (c, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .85, metalness: 0 }, extra));
-const SPH = new THREE.SphereGeometry(1, 36, 28);
-function ell(mat, r, sx, sy, sz, x, y, z, parent) {
-  const m = new THREE.Mesh(SPH, mat); m.scale.set(r * sx, r * sy, r * sz); m.position.set(x, y, z);
-  parent.add(m); return m;
+const SPH = new THREE.SphereGeometry(1, 32, 24);
+function ell(mat, r, sx, sy, sz, x, y, z, parent) { const m = new THREE.Mesh(SPH, mat); m.scale.set(r * sx, r * sy, r * sz); m.position.set(x, y, z); parent.add(m); return m; }
+function addEyes(head, x, y, z, r) {
+  const dark = M(0x2d2420, { roughness: .3 }), shine = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  return [-1, 1].map((s) => { const e = ell(dark, r, 1, 1.15, .8, x * s, y, z, head); const h = new THREE.Mesh(SPH, shine); h.scale.setScalar(.3); h.position.set(.3, .35, .8); e.add(h); e.userData.sy = e.scale.y; return e; });
 }
+/** 手（腕）。肩を支点に回すと「片手を上げる」「顔を洗う」ができる */
+function addArms(body, mat, x, y, z, r, len) {
+  return [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(x * s, y, z); body.add(g); ell(mat, r, 1, len, 1, 0, -r * len * .7, 0, g); g.userData.side = s; return g; });
+}
+function makeRig(root, body, head, parts) { return Object.assign({ root, body, head, ears: [], eyes: [], arms: [], tail: null, nose: null, anchor: null, earType: "" }, parts); }
+function anchorOn(head, y) { const a = new THREE.Group(); a.position.set(0, y, 0); head.add(a); return a; }
 
-/* うさぎ（たれ耳）。返り値：{ root, body, head, ears, eyes, tail, extra } */
 function buildRabbit() {
-  const fur = M(0xf7efe4), pink = M(0xf4a6b6), inner = M(0xf7c3cf), dark = M(0x2d2420, { roughness: .3 });
+  const fur = M(0xf7efe4), pink = M(0xf4a6b6), inner = M(0xf7c3cf);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  ell(fur, 1, 1, .9, 1.05, 0, .95, 0, body);                       // 胴
-  ell(fur, .5, 1, .7, 1, 0, .9, .6, body);                         // おなか前
-  const tail = ell(fur, .3, 1, 1, 1, 0, .8, -1.0, body);           // しっぽ（丸）
-  // 足（肉球つき）
-  for (const s of [-1, 1]) {
-    ell(fur, .3, 1.05, .7, 1.25, .45 * s, .2, .78, body);
-    const pad = ell(pink, .14, 1, 1, .35, .45 * s, .22, 1.13, body); pad.rotation.x = -.2;
-    ell(fur, .22, .9, 1.2, .9, .38 * s, .95, .82, body);          // 手
-  }
-  const head = new THREE.Group(); head.position.set(0, 1.95, .35); body.add(head);
+  ell(fur, 1, 1, .9, 1.05, 0, .95, 0, body);
+  const tail = ell(fur, .3, 1, 1, 1, 0, .85, -1.0, body);
+  for (const s of [-1, 1]) { ell(fur, .3, 1.05, .7, 1.25, .45 * s, .2, .78, body); ell(pink, .13, 1, 1, .35, .45 * s, .22, 1.13, body); }
+  const arms = addArms(body, fur, .42, 1.25, .78, .2, 1.5);
+  const head = new THREE.Group(); head.position.set(0, 1.95, .3); body.add(head);
   ell(fur, .8, 1.1, .95, 1, 0, 0, 0, head);
-  ell(fur, .3, 1.2, .8, 1, -.18, -.25, .55, head);
-  ell(fur, .3, 1.2, .8, 1, .18, -.25, .55, head);
-  const nose = ell(pink, .08, 1.3, 1, 1, 0, -.1, .8, head);
-  for (const s of [-1, 1]) ell(inner, .17, 1, .65, .35, .52 * s, -.18, .55, head); // ほっぺ
-  const eyes = [-1, 1].map((s) => ell(dark, .11, 1, 1.15, .8, .3 * s, .1, .68, head));
-  const shine = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  eyes.forEach((e) => { const h = new THREE.Mesh(SPH, shine); h.scale.setScalar(.3); h.position.set(.3, .35, .8); e.add(h); });
-  // たれ耳：頭の横から下へ垂れる
-  const ears = [-1, 1].map((s) => {
-    const g = new THREE.Group(); g.position.set(.62 * s, .35, 0); g.rotation.z = .25 * s; head.add(g);
-    ell(fur, .26, 1, 3.1, .55, 0, -.55, 0, g);
-    ell(inner, .17, .8, 2.6, .3, -.03 * s, -.55, .1, g);
-    return g;
-  });
-  return { root, body, head, ears, eyes, tail, nose, earType: "lop" };
+  ell(fur, .22, 1.1, .8, 1, -.13, -.25, .64, head); ell(fur, .22, 1.1, .8, 1, .13, -.25, .64, head);
+  const nose = ell(pink, .07, 1.3, 1, 1, 0, -.12, .82, head);
+  for (const s of [-1, 1]) ell(inner, .15, 1, .65, .35, .5 * s, -.2, .6, head);
+  const eyes = addEyes(head, .3, .1, .68, .11);
+  const ears = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.66 * s, .3, .05); g.rotation.z = .3 * s; head.add(g); ell(fur, .25, 1, 3, .55, 0, -.5, 0, g); ell(inner, .16, .8, 2.5, .3, -.04 * s, -.5, .1, g); return g; });
+  return makeRig(root, body, head, { ears, eyes, arms, tail, nose, earType: "lop", anchor: anchorOn(head, .72) });
 }
-
-/* ペンギン */
 function buildPenguin() {
-  const navy = M(0x2f3a52), white = M(0xfbf8f1), orange = M(0xf5a33c), dark = M(0x1d2230, { roughness: .3 }), pink = M(0xf7b8c4);
+  const navy = M(0x2f3a52), white = M(0xfbf8f1), orange = M(0xf5a33c), pink = M(0xf7b8c4);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  ell(navy, 1, .95, 1.15, .9, 0, 1.1, 0, body);                   // 胴
-  ell(white, .82, .95, 1.05, .6, 0, 1.0, .42, body);              // おなか
-  for (const s of [-1, 1]) {                                       // 足
-    const f = ell(orange, .28, 1.1, .35, 1.5, .38 * s, .08, .55, body); f.rotation.y = -.2 * s;
-  }
-  const flippers = [-1, 1].map((s) => {                            // つばさ
-    const g = new THREE.Group(); g.position.set(.9 * s, 1.35, 0); body.add(g);
-    ell(navy, .3, .35, 1.6, .9, .05 * s, -.35, 0, g); g.rotation.z = .3 * s; return g;
-  });
+  ell(navy, 1, .95, 1.15, .9, 0, 1.1, 0, body);
+  ell(white, .82, .95, 1.05, .6, 0, 1.0, .42, body);
+  for (const s of [-1, 1]) { const f = ell(orange, .28, 1.1, .35, 1.5, .38 * s, .08, .55, body); f.rotation.y = -.2 * s; }
+  const arms = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.88 * s, 1.6, 0); body.add(g); ell(navy, .3, .35, 1.6, .9, 0, -.42, 0, g); g.userData.side = s; return g; });
   const head = new THREE.Group(); head.position.set(0, 2.25, .1); body.add(head);
   ell(navy, .72, 1.05, .95, 1, 0, 0, 0, head);
-  ell(white, .55, 1.15, .85, .6, 0, -.08, .36, head);              // 顔の白
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(.13, .3, 16), orange);
-  beak.rotation.x = Math.PI / 2; beak.position.set(0, -.12, .74); head.add(beak);
+  ell(white, .55, 1.15, .85, .6, 0, -.08, .36, head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.13, .3, 16), orange); beak.rotation.x = Math.PI / 2; beak.position.set(0, -.12, .74); head.add(beak);
   for (const s of [-1, 1]) ell(pink, .12, 1, .65, .35, .4 * s, -.22, .55, head);
-  const eyes = [-1, 1].map((s) => ell(dark, .1, 1, 1.15, .8, .22 * s, .08, .66, head));
-  const shine = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  eyes.forEach((e) => { const h = new THREE.Mesh(SPH, shine); h.scale.setScalar(.3); h.position.set(.3, .35, .8); e.add(h); });
-  return { root, body, head, ears: flippers, eyes, tail: null, nose: beak, earType: "flipper" };
+  const eyes = addEyes(head, .22, .08, .66, .1);
+  return makeRig(root, body, head, { eyes, arms, nose: beak, earType: "flipper", anchor: anchorOn(head, .66) });
+}
+function buildHamster() {
+  const fur = M(0xf0c27a), white = M(0xfdf6ea), pink = M(0xf4a6b6);
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  ell(fur, 1, 1.05, .95, 1, 0, 1.0, 0, body);
+  ell(white, .75, 1, .95, .6, 0, .85, .5, body);
+  for (const s of [-1, 1]) { ell(pink, .16, 1.2, .5, 1.3, .42 * s, .08, .7, body); }
+  const arms = addArms(body, pink, .38, 1.15, .8, .13, 1.4);
+  const head = new THREE.Group(); head.position.set(0, 1.85, .25); body.add(head);
+  ell(fur, .8, 1.15, .9, 1, 0, 0, 0, head);
+  for (const s of [-1, 1]) ell(white, .3, 1.1, .9, .8, .38 * s, -.25, .5, head);       // ほっぺ袋
+  const nose = ell(pink, .07, 1.2, 1, 1, 0, -.08, .8, head);
+  const ears = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.5 * s, .55, -.05); head.add(g); ell(fur, .22, 1, 1, .5, 0, .1, 0, g); ell(pink, .14, 1, 1, .3, 0, .1, .07, g); return g; });
+  const eyes = addEyes(head, .3, .12, .66, .1);
+  for (const s of [-1, 1]) ell(M(0xf7c3cf), .12, 1, .6, .3, .55 * s, -.2, .55, head);
+  return makeRig(root, body, head, { ears, eyes, arms, nose, earType: "round", anchor: anchorOn(head, .74) });
+}
+function buildCat() {
+  const fur = M(0xeab47a), white = M(0xfdf6ea), pink = M(0xf4a6b6), stripe = M(0xc98a4e);
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  ell(fur, 1, .9, .95, 1.1, 0, .95, -.05, body);
+  ell(white, .65, 1, 1, .6, 0, .9, .55, body);
+  for (const s of [-1, 1]) ell(white, .26, 1, .7, 1.3, .4 * s, .18, .75, body);
+  const arms = addArms(body, white, .38, 1.25, .78, .18, 1.6);
+  // しっぽ（曲がった玉のつながり）
+  const tail = new THREE.Group(); tail.position.set(0, .6, -1.0); body.add(tail);
+  for (let i = 0; i < 6; i++) ell(i % 2 ? stripe : fur, .14, 1, 1, 1, Math.sin(i * .5) * .25, i * .2, -Math.sin(i * .35) * .25, tail);
+  const head = new THREE.Group(); head.position.set(0, 1.95, .3); body.add(head);
+  ell(fur, .8, 1.15, .92, 1, 0, 0, 0, head);
+  ell(white, .3, 1.4, .8, .8, 0, -.25, .5, head);
+  for (const x of [-.3, 0, .3]) ell(stripe, .1, 1, .3, .3, x, .55, .55, head);
+  const nose = ell(pink, .07, 1.3, .9, 1, 0, -.1, .78, head);
+  const ears = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.5 * s, .55, 0); g.rotation.z = -.25 * s; head.add(g);
+    const c = new THREE.Mesh(new THREE.ConeGeometry(.28, .5, 4), fur); c.position.y = .2; c.rotation.y = Math.PI / 4; g.add(c);
+    const ci = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 4), pink); ci.position.set(0, .16, .08); ci.rotation.y = Math.PI / 4; g.add(ci); return g; });
+  const eyes = addEyes(head, .3, .08, .66, .11);
+  return makeRig(root, body, head, { ears, eyes, arms, tail, nose, earType: "cat", anchor: anchorOn(head, .7) });
 }
 
-const Stage3D = {
+/* 家具・かざりの形（原点＝床に置いた時の底） */
+function buildDecor(id) {
+  const g = new THREE.Group(), c = new THREE.Color(DECOR[id].color);
+  const box = (w, h, d, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); g.add(o); return o; };
+  const cyl = (rt, rb, h, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 24), m); o.position.set(x, y, z); g.add(o); return o; };
+  switch (id) {
+    case "plant": cyl(.28, .22, .5, M(0xd9844f), 0, .25); ell(M(0x5fae5c), .45, 1, 1.1, 1, 0, .95, 0, g); ell(M(0x4f9a50), .3, 1, 1, 1, .25, .75, .1, g); break;
+    case "lamp": cyl(.25, .3, .06, M(0x8a7c6c), 0, .03); cyl(.04, .04, 1.4, M(0x8a7c6c), 0, .73); cyl(.22, .38, .4, M(0xfff1c2, { emissive: 0xffd77a, emissiveIntensity: .35 }), 0, 1.5); break;
+    case "cushion": ell(M(c), .5, 1, .4, 1, 0, .2, 0, g); ell(M(0xffffff), .12, 1, .5, 1, 0, .38, 0, g); break;
+    case "vase": cyl(.18, .14, .55, M(c), 0, .28); for (const [x, col] of [[-.15, 0xf47b9b], [0, 0xf6c453], [.15, 0xc8c2f2]]) { cyl(.015, .015, .5, M(0x5fae5c), x, .75); ell(M(col), .1, 1, 1, 1, x, 1.02, 0, g); } break;
+    case "shelf": box(1, 1.1, .4, M(c), 0, .55); box(.9, .04, .36, M(0xa87850), 0, .55, .02); box(.2, .3, .25, M(0xf2876b), -.25, .75, 0); box(.15, .25, .25, M(0x7fcfc4), -.05, .72, 0); ell(M(0xf6c453), .12, 1, 1, 1, .28, .72, 0, g); break;
+    case "picture": box(1, .8, .06, M(0xa87850)); box(.84, .64, .07, M(0xfff8ee), 0, 0, .01); ell(M(0xf47b9b), .12, 1, 1, .2, -.15, .05, .05, g); ell(M(0xf6c453), .1, 1, 1, .2, .15, -.05, .05, g); box(.02, .3, .01, M(0x5fae5c), 0, -.15, .05); break;
+    case "clock": { const o = cyl(.4, .4, .08, M(0xfbf8f1)); o.rotation.x = Math.PI / 2; const r = new THREE.Mesh(new THREE.TorusGeometry(.4, .05, 8, 32), M(0xf2876b)); g.add(r); box(.04, .28, .02, M(0x3b3552), 0, .1, .06); box(.2, .04, .02, M(0x3b3552), .08, 0, .06); break; }
+    case "garland": for (let i = 0; i < 5; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(.16, .32, 3), M([0xf2876b, 0xf6c453, 0x7fcfc4, 0xc8c2f2, 0xf47b9b][i])); t.rotation.z = Math.PI; t.position.set(-.8 + i * .4, -Math.sin(i / 4 * Math.PI) * .15, 0); g.add(t); } break;
+    case "rugRound": { const o = cyl(1.3, 1.3, .03, M(c), 0, .015); const o2 = cyl(1.0, 1.0, .035, M(0xf9e6c4), 0, .02); break; }
+    case "rugStar": { const s = new THREE.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? .6 : 1.35, a = i / 10 * Math.PI * 2 + Math.PI / 2; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? s.lineTo(x, y) : s.moveTo(x, y); } s.closePath(); const o = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .03, bevelEnabled: false }), M(c)); o.rotation.x = -Math.PI / 2; g.add(o); break; }
+    case "ball": ell(M(c), .3, 1, 1, 1, 0, .3, 0, g); { const r = new THREE.Mesh(new THREE.TorusGeometry(.3, .03, 8, 24), M(0xf2876b)); r.position.y = .3; g.add(r); } break;
+    case "blocks": box(.3, .3, .3, M(0xf2876b), -.18, .15); box(.3, .3, .3, M(0x7fcfc4), .16, .15, .05); box(.3, .3, .3, M(0xf6c453), 0, .45, .02); break;
+    case "bear": { const b = M(c); ell(b, .35, 1, 1.05, .9, 0, .35, 0, g); ell(b, .27, 1, .95, .9, 0, .85, 0, g); for (const s of [-1, 1]) { ell(b, .1, 1, 1, .6, .2 * s, 1.07, 0, g); ell(b, .1, 1, 1, 1, .22 * s, .2, .2, g); } ell(M(0xf5e6d0), .1, 1.2, .8, .6, 0, .8, .22, g); break; }
+  }
+  return g;
+}
+/* きせかえの形（頭のてっぺんにのせる） */
+function buildWear(id) {
+  const g = new THREE.Group(), m = M(WEAR[id].color);
+  if (id === "ribbon") { for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.ConeGeometry(.16, .3, 16), m); c.rotation.z = s * Math.PI / 2; c.position.set(.15 * s, .08, 0); g.add(c); } ell(m, .08, 1, 1, 1, 0, .08, 0, g); g.position.x = .3; g.rotation.z = -.3; }
+  if (id === "hat") { const b = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, .05, 32), m); g.add(b); const t = new THREE.Mesh(new THREE.CylinderGeometry(.3, .33, .35, 32), m); t.position.y = .2; g.add(t); const band = new THREE.Mesh(new THREE.CylinderGeometry(.335, .335, .08, 32), M(0xf6c453)); band.position.y = .07; g.add(band); }
+  if (id === "flower") { for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; ell(M([0xf6c453, 0xf47b9b, 0xffffff][i % 3]), .1, 1, .8, 1, Math.cos(a) * .42, .02, Math.sin(a) * .42, g); } }
+  if (id === "crown") { const ring = new THREE.Mesh(new THREE.CylinderGeometry(.32, .3, .18, 5, 1, true), M(0xf2c13a, { side: THREE.DoubleSide, metalness: .3, roughness: .4 })); ring.position.y = .09; g.add(ring); for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; const c = new THREE.Mesh(new THREE.ConeGeometry(.07, .2, 8), M(0xf2c13a, { metalness: .3, roughness: .4 })); c.position.set(Math.cos(a) * .3, .27, Math.sin(a) * .3); g.add(c); ell(M(0xf47b9b), .04, 1, 1, 1, Math.cos(a) * .3, .38, Math.sin(a) * .3, g); } }
+  return g;
+}
+
+/* ---------- 6. Room3D（お部屋） ---------- */
+// 置き場所。floor は床、wall は奥のかべ、rug は動物の足もと
+const SLOTS = {
+  rug:   { type: "rug",   pos: [0, 0, .6], label: "ラグ" },
+  f1:    { type: "floor", pos: [-2.15, 0, -1.6], label: "左おく" },
+  f2:    { type: "floor", pos: [2.15, 0, -1.6], label: "右おく" },
+  f3:    { type: "floor", pos: [-2.2, 0, 1.3], label: "左まえ" },
+  f4:    { type: "floor", pos: [2.2, 0, 1.3], label: "右まえ" },
+  w1:    { type: "wall",  pos: [-1.75, 2.3, -2.45], label: "かべ（左）" },
+  w2:    { type: "wall",  pos: [1.75, 2.3, -2.45], label: "かべ（右）" },
+};
+const Room3D = {
   init(el) {
     this.el = el;
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     el.prepend(this.renderer.domElement);
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
-    this.camera.position.set(0, 3.3, 10.5); this.camera.lookAt(0, 1.45, 0);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcfe0c0, .75));
-    const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(3, 7, 5); this.scene.add(sun);
-    const fill = new THREE.DirectionalLight(0xffeef2, .25); fill.position.set(-4, 2, -3); this.scene.add(fill);
-    // 地面（丸い草地）
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(3.4, 48), M(0xbfe3a6));
-    ground.rotation.x = -Math.PI / 2; this.scene.add(ground);
-    const rim = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.6, 48), M(0xa6d18b));
-    rim.rotation.x = -Math.PI / 2; rim.position.y = .005; this.scene.add(rim);
-    this.shadow = new THREE.Mesh(new THREE.CircleGeometry(1.25, 40), new THREE.MeshBasicMaterial({ color: 0x3b5a2a, transparent: true, opacity: .16 }));
-    this.shadow.rotation.x = -Math.PI / 2; this.shadow.position.y = .01; this.scene.add(this.shadow);
-
-    this.holder = new THREE.Group(); this.scene.add(this.holder);
-    this.rig = null; this.rotY = .35; this.targetRot = null;
-    this.anim = { jump: -1, spin: false, eat: -1, wiggle: 0, happy: 0 };
+    this.camera = new THREE.PerspectiveCamera(42, 1, .1, 100);
+    this.hemi = new THREE.HemisphereLight(0xffffff, 0xd9c8b4, .75); this.scene.add(this.hemi);
+    this.sun = new THREE.DirectionalLight(0xffffff, .75); this.sun.position.set(3, 7, 5); this.scene.add(this.sun);
+    this.lampLight = new THREE.PointLight(0xffc98a, 0, 9); this.lampLight.position.set(0, 3, 1.5); this.scene.add(this.lampLight);
+    // 床とかべ
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 5), M(0xe8c9a0)); floor.rotation.x = -Math.PI / 2; this.scene.add(floor);
+    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.02, 5), M(0xd3b085)); l.rotation.x = -Math.PI / 2; l.position.set(-2.5 + i, .002, 0); this.scene.add(l); }
+    this.wallMat = M(0xfbefe6);
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(6, 4.2), this.wallMat); back.position.set(0, 2.1, -2.5); this.scene.add(back);
+    const left = new THREE.Mesh(new THREE.PlaneGeometry(5, 4.2), this.wallMat); left.rotation.y = Math.PI / 2; left.position.set(-3, 2.1, 0); this.scene.add(left);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(6, .2, .05), M(0xd9b48a)); base.position.set(0, .1, -2.48); this.scene.add(base);
+    // まど（外の色が時間で変わる）
+    this.winMat = new THREE.MeshBasicMaterial({ color: 0xbfe6f5 });
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.1), this.winMat); win.position.set(0, 2.75, -2.49); this.scene.add(win);
+    const frame = M(0xffffff);
+    for (const [w, h, x, y] of [[1.45, .08, 0, 3.32], [1.45, .08, 0, 2.18], [.08, 1.2, -.68, 2.75], [.08, 1.2, .68, 2.75], [.05, 1.1, 0, 2.75], [1.3, .05, 0, 2.75]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .04), frame); b.position.set(x, y, -2.47); this.scene.add(b); }
+    this.stars = new THREE.Group(); for (let i = 0; i < 6; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(.025, 6, 4), new THREE.MeshBasicMaterial({ color: 0xfff6c8 })); s.position.set(rand(-.55, .55), rand(2.3, 3.2), -2.485); this.stars.add(s); } this.scene.add(this.stars);
+    this.shadow = new THREE.Mesh(new THREE.CircleGeometry(1.1, 40), new THREE.MeshBasicMaterial({ color: 0x5a3a20, transparent: true, opacity: .15 }));
+    this.shadow.rotation.x = -Math.PI / 2; this.shadow.position.set(0, .04, .5); this.scene.add(this.shadow);
+    this.decorGroup = new THREE.Group(); this.scene.add(this.decorGroup);
+    this.holder = new THREE.Group(); this.holder.position.set(0, 0, .5); this.scene.add(this.holder);
+    this.rig = null; this.rotY = 0; this.targetRot = null;
+    this.anim = { jump: -1, spin: false, eat: -1, wiggle: 0, trick: null, trickT: 0, out: -1, back: -1 };
     this.blinkAt = 1.5; this.earAt = 3; this.earT = -1; this.earSide = 0;
     this.raycaster = new THREE.Raycaster();
     this.running = true;
     addEventListener("resize", () => this.resize());
-    this.resize();
+    this.resize(); this.buildDecor(); this.applyDayNight();
     this.clock = new THREE.Clock();
     const loop = () => { requestAnimationFrame(loop); if (this.running) this.frame(); };
     loop();
@@ -494,128 +654,159 @@ const Stage3D = {
     const w = this.el.clientWidth, h = this.el.clientHeight;
     if (!w || !h) return;
     this.renderer.setSize(w, h, false);
-    this.camera.aspect = w / h;
-    // 縦長の画面でも動物が切れないように、横幅が狭いほどカメラを引く
-    const dist = 10.5 * Math.max(1, .62 / this.camera.aspect * .9);
-    this.camera.position.set(0, 3.3 * dist / 10.5, dist); this.camera.lookAt(0, 1.45, 0);
-    this.camera.updateProjectionMatrix();
+    const cam = this.camera; cam.aspect = w / h;
+    // お部屋の幅(5.4)と高さ(4.6)が入るまでカメラを引く
+    const t = Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    const dist = Math.max(2.7 / (t * cam.aspect), 2.3 / t) + 1.2;
+    cam.position.set(dist * .14, 1.7 + dist * .22, dist + .3); cam.lookAt(0, 1.5, -.3);
+    cam.updateProjectionMatrix();
   },
-  /** 動物を切り替える（stage はその動物の成長段階） */
-  show(speciesId, stage) {
-    if (this.rig) { this.holder.remove(this.rig.root); }
-    const sp = SPECIES[speciesId];
-    const key = speciesId;
-    if (sp.glb) {
-      this.rig = { root: new THREE.Group(), body: new THREE.Group(), head: null, ears: [], eyes: [], tail: null, nose: null };
-      this.rig.root.add(this.rig.body);
-      loadGLB(sp.glb).then((obj) => { if (this.rig && this.rig.key === key) { obj.scale.setScalar(sp.glbScale || 1); this.rig.body.add(obj); } });
-    } else {
-      this.rig = sp.build();
+  /** 飾りを置き直す */
+  buildDecor() {
+    while (this.decorGroup.children.length) this.decorGroup.remove(this.decorGroup.children[0]);
+    for (const [slot, id] of Object.entries(D().room)) {
+      if (!id || !DECOR[id] || !SLOTS[slot]) continue;
+      const o = buildDecor(id), p = SLOTS[slot].pos;
+      o.position.set(p[0], p[1], p[2]);
+      if (SLOTS[slot].type === "floor") o.rotation.y = -p[0] * .12;
+      this.decorGroup.add(o);
     }
-    this.rig.key = key;
+  },
+  /** 時刻で空の色・明るさを変える */
+  applyDayNight() {
+    const h = new Date().getHours();
+    const night = h >= 19 || h < 5, eve = h >= 16 && h < 19, morn = h >= 5 && h < 8;
+    this.winMat.color.set(night ? 0x1f2a5c : eve ? 0xf5b38a : morn ? 0xffe2c4 : 0xbfe6f5);
+    this.stars.visible = night;
+    const sleeping = Care.cur()?.sleeping;
+    const dark = night || sleeping;
+    this.hemi.intensity = dark ? .38 : eve ? .6 : .75;
+    this.sun.intensity = dark ? .15 : eve ? .55 : .75;
+    this.lampLight.intensity = dark ? .9 : eve ? .3 : 0;
+    $("veil").style.opacity = sleeping ? 1 : night ? .4 : 0;
+    this.renderer.setClearColor(dark ? 0x2a2c55 : 0xeef8fb);
+  },
+  show(id) {
+    if (this.rig) this.holder.remove(this.rig.root);
+    this.rig = null;
+    if (!id) return;
+    const sp = SPECIES[id], a = D().animals[id];
+    if (sp.glb) {
+      const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+      this.rig = makeRig(root, body, null, { anchor: new THREE.Group() });
+      body.add(this.rig.anchor);
+      const rig = this.rig;
+      loadGLB(sp.glb).then(({ obj, top }) => { body.add(obj); rig.anchor.position.y = top; });
+    } else this.rig = sp.build();
+    this.rig.id = id;
     this.holder.add(this.rig.root);
-    this.setStage(stage, false);
+    this.setStage(stageOf(a), false);
+    this.setWear(a.wear);
+    this.rig.root.visible = !a.walk;
+    this.anim.out = -1; this.anim.back = -1;
   },
   setStage(stage, celebrate) {
     const st = CONFIG.stages[stage];
     this.baseScale = st.scale;
-    if (this.rig.head) this.rig.head.scale.setScalar(st.head);
+    if (this.rig?.head) this.rig.head.scale.setScalar(st.head);
     if (celebrate) { this.anim.jump = 0; this.anim.spin = true; }
   },
-  /** 画面上の点が動物に当たっているか */
-  hit(clientX, clientY) {
-    if (!this.rig) return false;
+  setWear(id) {
+    if (!this.rig?.anchor) return;
+    while (this.rig.anchor.children.length) this.rig.anchor.remove(this.rig.anchor.children[0]);
+    if (id && WEAR[id]) this.rig.anchor.add(buildWear(id));
+  },
+  hit(x, y) {
+    if (!this.rig || !this.rig.root.visible) return false;
     const r = this.renderer.domElement.getBoundingClientRect();
-    const v = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
-    this.raycaster.setFromCamera(v, this.camera);
+    this.raycaster.setFromCamera(new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1), this.camera);
     return this.raycaster.intersectObject(this.rig.root, true).length > 0;
   },
-  /** 3D上の頭の位置を、画面の座標にする（ごはんを飛ばす先・ハートを出す位置） */
   headScreen() {
-    const r = this.renderer.domElement.getBoundingClientRect();
-    const p = new THREE.Vector3();
-    (this.rig && this.rig.head ? this.rig.head : this.holder).getWorldPosition(p);
-    if (!(this.rig && this.rig.head)) p.y += 2;
+    const r = this.renderer.domElement.getBoundingClientRect(), p = new THREE.Vector3();
+    if (this.rig?.head) this.rig.head.getWorldPosition(p); else { this.holder.getWorldPosition(p); p.y += 2; }
     p.project(this.camera);
     return { x: (p.x + 1) / 2 * r.width, y: (1 - p.y) / 2 * r.height };
   },
-  faceFront() { const two = Math.PI * 2; const cur = ((this.rotY % two) + two) % two; let d = -cur; if (d < -Math.PI) d += two; this.targetRot = this.rotY + d; },
+  faceFront() { const two = Math.PI * 2, cur = ((this.rotY % two) + two) % two; let d = -cur; if (d < -Math.PI) d += two; this.targetRot = this.rotY + d; },
   jump(spin = false) { if (this.anim.jump < 0) { this.anim.jump = 0; this.anim.spin = spin; } },
   eat() { this.faceFront(); this.anim.eat = 0; },
   wiggle() { this.anim.wiggle = Math.min(1, this.anim.wiggle + .5); },
+  /** げい：部品がある動物は「片手を上げる」「顔を洗う」、モデルの時は「その場でくるくる」 */
+  trick() {
+    this.faceFront();
+    const list = this.rig?.arms?.length ? ["wave", "wash", "spin"] : ["spin", "bow"];
+    this.anim.trick = list[Math.floor(Math.random() * list.length)]; this.anim.trickT = 0;
+    return this.anim.trick;
+  },
+  walkOut(done) { this.anim.out = 0; this.anim.outDone = done; },
+  walkBack() { if (!this.rig) return; this.rig.root.visible = true; this.anim.back = 0; },
+  celebrate(text) {
+    const lv = document.createElement("div"); lv.className = "levelup"; lv.textContent = text;
+    $("stage").appendChild(lv); setTimeout(() => lv.remove(), 2200);
+  },
 
   frame() {
     const dt = Math.min(this.clock.getDelta(), .05), t = this.clock.elapsedTime, rig = this.rig;
-    if (!rig) { this.renderer.render(this.scene, this.camera); return; }
-    const mood = Care.mood();   // "happy" | "normal" | "sad"
-    if (this.targetRot !== null) {
-      this.rotY += (this.targetRot - this.rotY) * Math.min(1, dt * 7);
-      if (Math.abs(this.targetRot - this.rotY) < .002) { this.rotY = this.targetRot; this.targetRot = null; }
-    } else if (!Care.dragging) {
-      this.rotY += Math.sin(t * .4) * dt * .15;   // ゆっくり首をふるように
-    }
-    // ジャンプ（踏み込み→空中→着地でむにっ）
-    let y = 0, sy = 1 + Math.sin(t * (mood === "sad" ? 1.2 : 2.3)) * .02, sxz = 2 - sy, spinA = 0;
-    const a = this.anim;
+    if (!rig) { this.shadow.visible = false; this.renderer.render(this.scene, this.camera); return; }
+    const a = this.anim, mood = Care.mood(), sleeping = Care.cur()?.sleeping;
+    if (this.targetRot !== null) { this.rotY += (this.targetRot - this.rotY) * Math.min(1, dt * 7); if (Math.abs(this.targetRot - this.rotY) < .002) { this.rotY = this.targetRot; this.targetRot = null; } }
+    else if (!Care.dragging && !sleeping) this.rotY += Math.sin(t * .4) * dt * .15;
+    let y = 0, x = 0, z = 0, sy = 1 + Math.sin(t * (sleeping ? .9 : mood === "sad" ? 1.2 : 2.3)) * (sleeping ? .035 : .02), sxz = 2 - sy, spinA = 0, tilt = 0;
     if (a.jump >= 0) {
       a.jump += dt; const T = a.jump;
       if (T < .14) { const k = Math.sin(T / .14 * Math.PI / 2); sy = 1 - .2 * k; sxz = 1 + .12 * k; }
-      else if (T < .74) { const k = (T - .14) / .6; y = Math.sin(k * Math.PI) * 1.3; sy = 1 + .12 * Math.sin(k * Math.PI) * (1 - k); sxz = 1 - .05 * (1 - k); if (a.spin) spinA = k * Math.PI * 2; }
+      else if (T < .74) { const k = (T - .14) / .6; y = Math.sin(k * Math.PI) * 1.2; sy = 1 + .12 * Math.sin(k * Math.PI) * (1 - k); sxz = 1 - .05 * (1 - k); if (a.spin) spinA = k * Math.PI * 2; }
       else if (T < .94) { const k = Math.sin((T - .74) / .2 * Math.PI); sy = 1 - .16 * k; sxz = 1 + .1 * k; }
       else { a.jump = -1; a.spin = false; }
     }
-    // 食べる（頭を3回うなずく）
-    if (rig.head) rig.head.rotation.x = 0;
-    if (a.eat >= 0) {
-      a.eat += dt;
-      if (rig.head) rig.head.rotation.x = Math.max(0, Math.sin(a.eat * 14)) * .25;
-      else { sy *= 1 - Math.max(0, Math.sin(a.eat * 14)) * .06; }
-      if (a.eat > 1.4) a.eat = -1;
+    // おさんぽに出かける（右へぴょんぴょん→消える）／帰ってくる（右から）
+    let face = this.rotY;
+    if (a.out >= 0) { a.out += dt; const k = Math.min(1, a.out / 1.6); x = k * 5; y = Math.abs(Math.sin(a.out * 9)) * .35; face = Math.PI / 2; if (k >= 1) { a.out = -1; rig.root.visible = false; a.outDone && a.outDone(); } }
+    if (a.back >= 0) { a.back += dt; const k = Math.min(1, a.back / 1.6); x = (1 - k) * 5; y = Math.abs(Math.sin(a.back * 9)) * .35; face = -Math.PI / 2 * (1 - k); if (k >= 1) { a.back = -1; this.rotY = 0; this.jump(true); } }
+    if (rig.head) rig.head.rotation.set(0, 0, 0);
+    if (a.eat >= 0) { a.eat += dt; if (rig.head) rig.head.rotation.x = Math.max(0, Math.sin(a.eat * 14)) * .25; else sy *= 1 - Math.max(0, Math.sin(a.eat * 14)) * .06; if (a.eat > 1.4) a.eat = -1; }
+    // 腕：ふだんは下ろす。げいの時に動かす
+    rig.arms.forEach((g) => { g.rotation.set(0, 0, 0); });
+    if (a.trick) {
+      a.trickT += dt; const T = a.trickT;
+      if (a.trick === "wave") { const arm = rig.arms[1]; if (arm) { const up = Math.min(1, T * 4) * (T > 1.8 ? Math.max(0, 1 - (T - 1.8) * 4) : 1); arm.rotation.z = up * 2.5 * arm.userData.side; arm.rotation.x = Math.sin(T * 12) * .25 * up; } if (rig.head) rig.head.rotation.z = Math.sin(T * 3) * .08; }
+      if (a.trick === "wash") { const up = Math.min(1, T * 4) * (T > 2 ? Math.max(0, 1 - (T - 2) * 4) : 1); rig.arms.forEach((g) => { g.rotation.x = -up * 2.1; g.rotation.z = up * .5 * g.userData.side * -1 + Math.sin(T * 14 + g.userData.side) * .25 * up; }); if (rig.head) rig.head.rotation.x = up * .15; }
+      if (a.trick === "spin") { spinA = Math.min(1, T / 1.2) * Math.PI * 4; y = Math.sin(Math.min(1, T / 1.2) * Math.PI) * .4; }
+      if (a.trick === "bow") { tilt = Math.sin(Math.min(1, T / 1.4) * Math.PI) * .35; }
+      if (T > 2.3) a.trick = null;
     }
-    // なでられて体をふるふる
     a.wiggle = Math.max(0, a.wiggle - dt * 1.5);
-    const wig = Math.sin(t * 30) * .05 * a.wiggle;
-    this.holder.rotation.set(0, this.rotY + spinA, wig);
+    this.holder.position.set(x, 0, .5 + z);
+    this.holder.rotation.set(tilt, (a.out >= 0 || a.back >= 0 ? face : this.rotY) + spinA, Math.sin(t * 30) * .05 * a.wiggle);
     rig.body.position.y = y;
     const s = this.baseScale;
     rig.root.scale.set(s * sxz, s * sy, s * sxz);
+    this.shadow.visible = rig.root.visible;
+    this.shadow.position.x = x;
     this.shadow.scale.setScalar(s * (1 - y * .25));
-    this.shadow.material.opacity = .16 - y * .05;
-
-    // ここから下は「作った見た目」の時だけ（3Dモデルの時は部位がないので何もしない）
-    // 耳・つばさ
+    // ここから下は「作った見た目」の時だけ
+    const air = a.jump > .14 && a.jump < .74;
     rig.ears.forEach((e, i) => {
       const side = i ? 1 : -1;
-      const air = a.jump > .14 && a.jump < .74;
-      if (rig.earType === "lop") {
-        let z = .25 * side + (air ? -.35 * side : 0) + (mood === "sad" ? .12 * side : 0);
-        e.rotation.z = z + Math.sin(t * 1.6 + i) * .03;
-        e.rotation.x = air ? -.4 : 0;
-      } else {
-        // ペンギンのつばさ：うれしい時・ジャンプ中はパタパタ
-        const flap = (air || mood === "happy" && Math.sin(t * .7) > .6) ? Math.sin(t * 22) * .5 : 0;
-        e.rotation.z = (.3 + (mood === "sad" ? -.15 : 0)) * side + flap * side;
-      }
+      if (rig.earType === "lop") { e.rotation.z = .3 * side + (air ? -.35 * side : 0) + (mood === "sad" || sleeping ? .12 * side : 0) + Math.sin(t * 1.6 + i) * .03; e.rotation.x = air ? -.4 : 0; }
+      if (rig.earType === "cat") { e.rotation.z = -.25 * side + (mood === "sad" ? .35 * side : 0); }
+      if (rig.earType === "round") { e.rotation.z = (mood === "sad" ? .3 : 0) * side; }
     });
-    // まばたき
-    if (rig.eyes.length && t > this.blinkAt) {
-      const b = t - this.blinkAt, k = b < .1 ? 1 - b / .1 * .9 : b < .2 ? .1 + (b - .1) / .1 * .9 : 1;
-      rig.eyes.forEach((e) => e.scale.y = .11 * 1.15 * k * (rig.earType === "flipper" ? .1 / .11 : 1));
-      if (b > .2) this.blinkAt = t + 2 + Math.random() * 3;
+    if (rig.earType === "flipper" && !a.trick) rig.arms.forEach((g) => { const flap = (air || (mood === "happy" && Math.sin(t * .7) > .6)) ? Math.sin(t * 22) * .5 : 0; g.rotation.z = (.25 + flap) * g.userData.side; });
+    if (rig.eyes.length) {
+      let k = 1;
+      if (sleeping) k = .12;
+      else if (t > this.blinkAt) { const b = t - this.blinkAt; k = b < .1 ? 1 - b / .1 * .9 : b < .2 ? .1 + (b - .1) / .1 * .9 : 1; if (b > .2) this.blinkAt = t + 2 + Math.random() * 3; }
+      rig.eyes.forEach((e) => (e.scale.y = e.userData.sy * k));
     }
-    // うさぎ：片耳ぴくっ／鼻ひくひく／しっぽふるふる
-    if (rig.earType === "lop") {
+    if (rig.earType === "lop" && !sleeping) {
       if (t > this.earAt && this.earT < 0) { this.earT = 0; this.earSide = Math.random() < .5 ? 0 : 1; }
-      if (this.earT >= 0) {
-        this.earT += dt;
-        rig.ears[this.earSide].rotation.x = Math.sin(this.earT * 28) * .18 * Math.max(0, 1 - this.earT / .4);
-        if (this.earT > .4) { this.earT = -1; this.earAt = t + 3 + Math.random() * 4; }
-      }
-      if (rig.nose) rig.nose.position.y = -.1 + (Math.sin(t * .9) > .3 ? Math.max(0, Math.sin(t * 14)) * .015 : 0);
-      if (rig.tail) rig.tail.position.x = Math.sin(t * 9) * .03 * (Math.sin(t * .7) > .6 ? 1 : 0);
+      if (this.earT >= 0) { this.earT += dt; rig.ears[this.earSide].rotation.x = Math.sin(this.earT * 28) * .18 * Math.max(0, 1 - this.earT / .4); if (this.earT > .4) { this.earT = -1; this.earAt = t + 3 + Math.random() * 4; } }
     }
-    // うれしい時はときどき自分でぴょん
-    if (mood === "happy" && a.jump < 0 && Math.random() < dt * .08) this.jump(false);
+    if (rig.nose && rig.earType !== "flipper") rig.nose.position.y = rig.nose.userData.y0 ?? (rig.nose.userData.y0 = rig.nose.position.y), rig.nose.position.y = rig.nose.userData.y0 + (!sleeping && Math.sin(t * .9) > .3 ? Math.max(0, Math.sin(t * 14)) * .015 : 0);
+    if (rig.tail) { if (rig.earType === "cat") rig.tail.rotation.z = Math.sin(t * 2) * .25; else rig.tail.position.x = Math.sin(t * 9) * .03 * (Math.sin(t * .7) > .6 ? 1 : 0); }
+    if (!sleeping && mood === "happy" && a.jump < 0 && !a.trick && a.out < 0 && a.back < 0 && Math.random() < dt * .06) this.jump(false);
     this.renderer.render(this.scene, this.camera);
   },
 };
@@ -623,307 +814,347 @@ const Stage3D = {
 /* 3Dモデル（GLB）の読み込み。使う時だけ部品を読み込む */
 let gltfLoaderPromise = null;
 function loadGLB(path) {
-  if (!gltfLoaderPromise) {
-    gltfLoaderPromise = new Promise((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js";
-      s.onload = () => res(new THREE.GLTFLoader()); s.onerror = rej;
-      document.head.appendChild(s);
-    });
-  }
-  return gltfLoaderPromise.then((loader) => new Promise((res, rej) => {
-    loader.load(path, (g) => {
-      const obj = g.scene;
-      // 足元を地面に、中心をまん中に合わせる
-      const box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
-      box.getSize(size); box.getCenter(c);
-      const k = 2.8 / Math.max(size.y, .001);
-      obj.scale.setScalar(k);
-      obj.position.set(-c.x * k, -box.min.y * k, -c.z * k);
-      const wrap = new THREE.Group(); wrap.add(obj); res(wrap);
-    }, undefined, rej);
-  }));
+  if (!gltfLoaderPromise) gltfLoaderPromise = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"; s.onload = () => res(new THREE.GLTFLoader()); s.onerror = rej; document.head.appendChild(s); });
+  return gltfLoaderPromise.then((loader) => new Promise((res, rej) => loader.load(path, (g) => {
+    const obj = g.scene, box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
+    box.getSize(size); box.getCenter(c);
+    const k = 2.8 / Math.max(size.y, .001);
+    obj.scale.setScalar(k); obj.position.set(-c.x * k, -box.min.y * k, -c.z * k);
+    res({ obj, top: size.y * k });
+  }, undefined, rej)));
 }
 
-/* ---------- 6. Care（おせわ画面） ---------- */
+/* ---------- 7. Care（おせわ） ---------- */
 const $ = (id) => document.getElementById(id);
 const Care = {
-  dragging: false,
+  dragging: false, tool: "pet",
   init() {
-    $("btnPet").querySelector("#petIcon").innerHTML = ICONS.pet;
-    $("btnPlay").querySelector("#playIcon").innerHTML = ICONS.ball;
     $("prevA").onclick = () => this.switchAnimal(-1);
     $("nextA").onclick = () => this.switchAnimal(1);
-    $("btnFeed").onclick = () => this.feed();
-    $("btnPet").onclick = () => { this.say(`${this.sp().name}を指でなでてね`); Stage3D.faceFront(); };
+    $("whoBtn").onclick = () => this.cur() && Sheets.name();
+    $("goShop").onclick = () => showTab("shop");
+    $("btnFeed").onclick = () => this.feed(false);
+    $("btnTreat").onclick = () => this.feed(true);
+    $("btnPet").onclick = () => this.setTool("pet");
+    $("btnBrush").onclick = () => this.setTool(this.tool === "brush" ? "pet" : "brush");
     $("btnPlay").onclick = () => this.play();
+    $("btnWalk").onclick = () => this.walk();
+    $("btnSleep").onclick = () => this.sleep();
+    $("btnTrick").onclick = () => this.trick();
+    $("btnWear").onclick = () => this.cur() && Sheets.wear();
+    $("btnDecor").onclick = () => Sheets.decor();
     this.initTouch();
     this.refresh(true);
   },
-  id() { return Save.data.current; },
-  sp() { return SPECIES[this.id()]; },
-  a() { return Save.data.animals[this.id()]; },
-  mood() {
-    const a = this.a();
-    if (a.hunger < 25 || a.energy < 15) return "sad";
-    if (a.bond >= 70 && a.hunger >= 50) return "happy";
-    return "normal";
+  id() { return D().current; },
+  cur() { return this.id() ? D().animals[this.id()] : null; },
+  mood() { const a = this.cur(); if (!a) return "normal"; if (a.hunger < 25 || a.energy < 15 || a.clean < 15) return "sad"; if (a.bond >= 70 && a.hunger >= 50) return "happy"; return "normal"; },
+  /** お世話できない状態（いない・おさんぽ中・ねている）ならメッセージを出して true */
+  blocked(allowSleep = false) {
+    const a = this.cur();
+    if (!a) { this.say("まずは、おみせで動物をおむかえしよう"); return true; }
+    if (a.walk) { this.say(`${nameOf(this.id())}は おさんぽ中だよ`); return true; }
+    if (a.sleeping && !allowSleep) { this.say(`${nameOf(this.id())}は ねているよ。起こすなら「おこす」`); return true; }
+    return false;
   },
   switchAnimal(d) {
-    const ids = Object.keys(SPECIES);
+    const ids = ownedIds(); if (ids.length < 2) return;
     const i = (ids.indexOf(this.id()) + d + ids.length) % ids.length;
-    Save.data.current = ids[i]; Save.store();
-    this.refresh(true);
-    this.greet();
+    D().current = ids[i]; Save.store(); this.refresh(true); this.greet();
+  },
+  setTool(t) {
+    if (t === "brush" && this.blocked()) return;
+    this.tool = t;
+    $("btnBrush").classList.toggle("on", t === "brush");
+    this.say(t === "brush" ? `ブラシで ${nameOf(this.id())}をこすってね` : `${nameOf(this.id() || "usagi")}を指でなでてね`);
+    Room3D.faceFront();
   },
   refresh(rebuild) {
-    const a = this.a(), sp = this.sp(), stage = stageOf(a);
-    if (rebuild) Stage3D.show(this.id(), stage);
-    $("aName").textContent = sp.name;
-    const next = CONFIG.stages[stage + 1];
-    $("aStage").textContent = CONFIG.stages[stage].name + (next ? `　つぎまで ${Math.max(0, next.care - a.care)}` : "　大きくなったね");
+    const id = this.id(), a = this.cur();
+    if (rebuild) Room3D.show(id);
+    document.querySelectorAll(".coinv").forEach((e) => (e.textContent = D().coins));
+    const lv = levelOf(D().xp), next = CONFIG.levels[lv];
+    $("lvChip").textContent = `Lv${lv}`; $("lvChip").title = next ? `つぎのレベルまで ${next - D().xp}` : "";
+    Quest.render();
+    $("emptyRoom").hidden = !!id;
+    $("actions").style.opacity = id ? 1 : .45;
+    $("statsRow").style.visibility = id ? "visible" : "hidden";
+    if (!a) { $("aName").textContent = "おへや"; $("aStage").textContent = "まだ動物がいないよ"; $("awayBox").hidden = true; $("prevA").disabled = $("nextA").disabled = true; return; }
+    const sp = SPECIES[id], stage = stageOf(a), ns = CONFIG.stages[stage + 1];
+    $("aName").textContent = nameOf(id);
+    $("aStage").textContent = `${sp.name}・${CONFIG.stages[stage].name}` + (ns ? `　つぎまで ${Math.max(0, ns.care - a.care)}` : "");
     const set = (v, m, val) => { $(v).textContent = Math.round(val); $(m).style.width = val + "%"; };
-    set("vHun", "mHun", a.hunger); set("vBond", "mBond", a.bond); set("vEng", "mEng", a.energy);
-    const n = Save.data.items[sp.food] || 0;
-    $("foodBadge").textContent = n;
-    $("foodBadge").classList.toggle("zero", n === 0);
-    $("feedIcon").innerHTML = ICONS[sp.food];
-    const multi = Object.keys(SPECIES).length > 1;
-    $("prevA").disabled = $("nextA").disabled = !multi;
+    set("vHun", "mHun", a.hunger); set("vBond", "mBond", a.bond); set("vEng", "mEng", a.energy); set("vCln", "mCln", a.clean);
+    const food = sp.foods.find((f) => D().items[f] > 0) || sp.foods[0];
+    const nFood = sp.foods.reduce((s, f) => s + (D().items[f] || 0), 0);
+    $("foodBadge").textContent = nFood; $("foodBadge").classList.toggle("zero", !nFood);
+    $("feedIcon").innerHTML = iconOf(food);
+    const nT = D().items.cookie || 0; $("treatBadge").textContent = nT; $("treatBadge").classList.toggle("zero", !nT);
+    $("sleepLabel").textContent = a.sleeping ? "おこす" : "ねかせる";
+    $("prevA").disabled = $("nextA").disabled = ownedIds().length < 2;
+    // おさんぽ中の表示
+    const box = $("awayBox");
+    if (a.walk) { const left = Math.max(0, a.walk.until - Date.now()); box.hidden = false; box.innerHTML = `<b>おさんぽ中</b>${nameOf(id)}は おでかけしているよ<br>あと ${Math.ceil(left / 60000)}分くらいで帰ってくるよ`; }
+    else box.hidden = true;
+    this.renderZzz(a.sleeping);
+    Room3D.applyDayNight();
   },
-  /** おせわポイントを足して、成長したらお祝い */
+  renderZzz(on) {
+    const fx = $("fx"); fx.querySelectorAll(".zzz").forEach((z) => z.remove());
+    if (!on) return;
+    const p = Room3D.headScreen();
+    ["Z", "z", "z"].forEach((ch, i) => { const z = document.createElement("span"); z.className = "zzz"; z.textContent = ch; z.style.left = (p.x + 20) + "px"; z.style.top = (p.y - 30) + "px"; z.style.animationDelay = (i * .8) + "s"; fx.appendChild(z); });
+  },
+  /** その動物のおせわポイント（成長）と、全体のおせわレベルの経験値を足す */
   addCare(n) {
-    const a = this.a(), before = stageOf(a);
-    a.care += n;
+    const a = this.cur(), before = stageOf(a);
+    a.care += n; addXp(n);
     const after = stageOf(a);
     if (after > before) {
       if (!a.seen.includes(after)) a.seen.push(after);
-      Stage3D.setStage(after, true);
-      const lv = document.createElement("div");
-      lv.className = "levelup"; lv.textContent = `${CONFIG.stages[after].name}に\nなったよ！`;
-      lv.style.whiteSpace = "pre-line";
-      $("stage").appendChild(lv); setTimeout(() => lv.remove(), 2200);
-      this.say(`${this.sp().name}が ${CONFIG.stages[after].name}に 成長した！`, 3000);
+      Room3D.setStage(after, true);
+      Room3D.celebrate(`${CONFIG.stages[after].name}に\nなったよ！`);
+      this.say(`${nameOf(this.id())}が ${CONFIG.stages[after].name}に 成長した！${after === CONFIG.stages.length - 1 ? " これからも なかよくしてね" : ""}`, 3200);
     }
   },
-  feed() {
-    const sp = this.sp(), a = this.a(), items = Save.data.items;
-    if (!items[sp.food]) {
-      this.say(`${sp.foodName}がないよ。${sp.foodWhere === "farm" ? "はたけで育てよう" : "つりで釣ってこよう"}`, 2600);
+  feed(isTreat) {
+    if (this.blocked()) return;
+    const id = this.id(), a = this.cur(), sp = SPECIES[id], items = D().items;
+    const food = isTreat ? "cookie" : sp.foods.find((f) => items[f] > 0);
+    if (!food || !items[food]) {
+      this.say(isTreat ? "おやつがないよ。おみせで買えるよ" : `${sp.foods.map((f) => ITEMS[f].name).slice(0, 2).join("か")}がないよ。${ITEMS[sp.foods[0]].kind === "fish" ? "つりで釣ってこよう" : "はたけで育てよう"}`, 2600);
       return;
     }
-    if (a.hunger >= 98) { this.say("おなかいっぱいみたい"); Stage3D.wiggle(); return; }
-    items[sp.food]--;
-    // ごはんがボタンから動物の口へ飛ぶ
-    const btn = $("btnFeed").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), hs = Stage3D.headScreen();
-    const f = document.createElement("div");
-    f.className = "flyfood"; f.innerHTML = ICONS[sp.food];
-    f.style.left = (btn.left + btn.width / 2 - 22) + "px"; f.style.top = (btn.top) + "px"; f.style.position = "fixed";
+    if (!isTreat && a.hunger >= 98) { this.say("おなかいっぱいみたい"); Room3D.wiggle(); return; }
+    items[food]--;
+    const btn = $(isTreat ? "btnTreat" : "btnFeed").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), hs = Room3D.headScreen();
+    const f = document.createElement("div"); f.className = "flyfood"; f.innerHTML = iconOf(food);
+    f.style.left = (btn.left + btn.width / 2 - 22) + "px"; f.style.top = btn.top + "px";
     document.body.appendChild(f);
-    requestAnimationFrame(() => {
-      f.style.transform = `translate(${st.left + hs.x - (btn.left + btn.width / 2)}px, ${st.top + hs.y + 20 - btn.top}px) scale(.7)`;
-      f.style.opacity = "0";
-    });
+    requestAnimationFrame(() => { f.style.transform = `translate(${st.left + hs.x - (btn.left + btn.width / 2)}px, ${st.top + hs.y + 20 - btn.top}px) scale(.7)`; f.style.opacity = "0"; });
     setTimeout(() => f.remove(), 800);
     setTimeout(() => {
-      Stage3D.eat();
-      a.hunger = clamp(a.hunger + CONFIG.feed.hunger); a.bond = clamp(a.bond + CONFIG.feed.bond); a.energy = clamp(a.energy + CONFIG.feed.energy);
-      this.hearts(3);
-      this.say(["もぐもぐ…おいしい！", "ぱくっ！", "ごちそうさま！"][Math.floor(Math.random() * 3)]);
-      this.addCare(CONFIG.feed.care);
+      Room3D.eat();
+      const c = isTreat ? CONFIG.treat : CONFIG.feed;
+      a.hunger = clamp(a.hunger + c.hunger); a.bond = clamp(a.bond + c.bond); if (c.energy) a.energy = clamp(a.energy + c.energy);
+      this.hearts(isTreat ? 5 : 3);
+      this.say(isTreat ? "わあ、おやつだ！" : ["もぐもぐ…おいしい！", "ぱくっ！", "ごちそうさま！"][Math.floor(Math.random() * 3)]);
+      this.addCare(c.xp); Quest.bump(isTreat ? "treat" : "feed");
       Save.store(); this.refresh(false);
     }, 550);
   },
   play() {
-    const a = this.a();
-    if (a.energy < CONFIG.play.needEnergy) { this.say("つかれてるみたい。少し休ませてあげてね", 2600); return; }
-    Stage3D.faceFront(); Stage3D.jump(true);
-    a.hunger = clamp(a.hunger + CONFIG.play.hunger); a.bond = clamp(a.bond + CONFIG.play.bond); a.energy = clamp(a.energy + CONFIG.play.energy);
-    setTimeout(() => this.hearts(2), 500);
-    this.say(["わーい！", "くるっ！", "たのしい！"][Math.floor(Math.random() * 3)]);
-    this.addCare(CONFIG.play.care);
+    if (this.blocked()) return;
+    const a = this.cur(), c = CONFIG.play;
+    if (a.energy < c.needEnergy) { this.say("つかれてるみたい。ねかせてあげてね", 2600); return; }
+    const toy = Object.values(D().room).some((id) => DECOR[id]?.toy);
+    Room3D.faceFront(); Room3D.jump(true);
+    a.hunger = clamp(a.hunger + c.hunger); a.bond = clamp(a.bond + c.bond + (toy ? c.toyBonus : 0)); a.energy = clamp(a.energy + c.energy); a.clean = clamp(a.clean + c.clean);
+    setTimeout(() => this.hearts(toy ? 4 : 2), 500);
+    this.say(toy ? "おもちゃで あそぶの たのしい！" : ["わーい！", "くるっ！", "たのしい！"][Math.floor(Math.random() * 3)]);
+    this.addCare(c.xp); Quest.bump("play");
     Save.store(); this.refresh(false);
   },
-  /** 動物の上を指でこすると「なでる」、何もない所をドラッグすると回る、動物をタップでぴょん */
+  trick() {
+    if (this.blocked()) return;
+    const a = this.cur(), c = CONFIG.trick;
+    if (a.energy < c.needEnergy) { this.say("つかれてるみたい"); return; }
+    const kind = Room3D.trick();
+    this.say({ wave: "はーい！", wash: "おかおを あらうよ", spin: "くるくる〜", bow: "ぺこり" }[kind]);
+    a.bond = clamp(a.bond + c.bond); a.energy = clamp(a.energy + c.energy);
+    setTimeout(() => this.hearts(2), 1200);
+    this.addCare(c.xp); Save.store(); this.refresh(false);
+  },
+  sleep() {
+    if (this.blocked(true)) return;
+    const a = this.cur();
+    a.sleeping = !a.sleeping;
+    this.say(a.sleeping ? "おやすみなさい…" : "おはよう！");
+    if (!a.sleeping) Room3D.jump(false);
+    Save.store(); this.refresh(false);
+  },
+  walk() {
+    if (this.blocked()) return;
+    const id = this.id(), a = this.cur(), c = CONFIG.walk;
+    if (a.energy < c.needEnergy) { this.say("つかれてるみたい。ねかせてあげてね", 2600); return; }
+    a.walk = { until: Date.now() + CONFIG.walkMinutes * 60000 };
+    a.energy = clamp(a.energy + c.energy); a.hunger = clamp(a.hunger + c.hunger);
+    Save.store();
+    this.say("いってきまーす！");
+    Room3D.walkOut(() => { if (this.id() === id) this.refresh(false); });
+    Quest.bump("walk");
+  },
+  /** おさんぽから帰ってきた動物がいたら、拾い物を受け取る */
+  checkWalks() {
+    for (const id of ownedIds()) {
+      const a = D().animals[id];
+      if (!a.walk || Date.now() < a.walk.until) continue;
+      a.walk = null;
+      const c = CONFIG.walk;
+      a.bond = clamp(a.bond + c.bond); a.clean = clamp(a.clean - 10);
+      // 拾い物：非売品の家具（よく出る）・コイン・たね
+      const r = Math.random(); let msg;
+      if (r < .55) {
+        const pool = Object.keys(DECOR).filter((k) => DECOR[k].shop === null);
+        const got = pool[Math.floor(Math.random() * pool.length)];
+        D().decor[got] = (D().decor[got] || 0) + 1;
+        msg = `「${DECOR[got].name}」を ひろってきた！ もようがえで かざれるよ`;
+      } else if (r < .85) {
+        const n = Math.round(rand(8, 25)); D().coins += n; msg = `コインを ${n}まい みつけてきた！`;
+      } else {
+        const lv = levelOf(D().xp), opts = Object.keys(CROPS).filter((k) => CROPS[k].seedPrice > 0 && CROPS[k].level <= lv + 1);
+        const s = opts.length ? opts[Math.floor(Math.random() * opts.length)] : null;
+        if (s) { D().seeds[s] = (D().seeds[s] || 0) + 2; msg = `${CROPS[s].name || ITEMS[CROPS[s].item].name}のたねを 2つ もらってきた！`; }
+        else { D().coins += 10; msg = "コインを 10まい みつけてきた！"; }
+      }
+      const prev = D().current; D().current = id;
+      this.addCare(c.xp);
+      D().current = prev;
+      Save.store();
+      toast(`${nameOf(id)}が帰ってきた！ ${msg}`, 3600);
+      if (id === this.id()) { this.refresh(false); Room3D.walkBack(); setTimeout(() => this.say(msg, 3600), 1700); }
+    }
+  },
   initTouch() {
     const el = $("stage");
-    let mode = null, lastX = 0, moved = 0, petAcc = 0, lastPetPos = null;
+    let mode = null, lastX = 0, moved = 0, acc = 0, last = null;
     el.addEventListener("pointerdown", (e) => {
       try { el.setPointerCapture(e.pointerId); } catch (_) {}
-      lastX = e.clientX; moved = 0; petAcc = 0; lastPetPos = { x: e.clientX, y: e.clientY };
-      mode = Stage3D.hit(e.clientX, e.clientY) ? "pet" : "rotate";
-      this.dragging = true; Stage3D.targetRot = null;
+      lastX = e.clientX; moved = 0; acc = 0; last = { x: e.clientX, y: e.clientY };
+      mode = Room3D.hit(e.clientX, e.clientY) ? "touch" : "rotate";
+      this.dragging = true; Room3D.targetRot = null;
     });
     el.addEventListener("pointermove", (e) => {
       if (!mode) return;
       const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
-      if (mode === "rotate") { Stage3D.rotY += dx * .012; return; }
-      // なでる：指が動いた距離に応じて
-      const dist = Math.hypot(e.clientX - lastPetPos.x, e.clientY - lastPetPos.y);
-      lastPetPos = { x: e.clientX, y: e.clientY };
-      if (!Stage3D.hit(e.clientX, e.clientY)) return;
-      petAcc += dist;
-      if (petAcc > 60) {
-        petAcc = 0; this.petOnce(e.clientX, e.clientY);
-      }
+      if (mode === "rotate") { Room3D.rotY += dx * .012; return; }
+      const dist = Math.hypot(e.clientX - last.x, e.clientY - last.y); last = { x: e.clientX, y: e.clientY };
+      moved += dist;
+      if (!Room3D.hit(e.clientX, e.clientY)) return;
+      acc += dist;
+      if (acc > 60) { acc = 0; this.rub(e.clientX, e.clientY); }
     });
-    const end = () => {
-      if (mode === "pet" && moved < 8) Stage3D.jump(false);
-      mode = null; this.dragging = false;
-    };
-    el.addEventListener("pointerup", end);
-    el.addEventListener("pointercancel", end);
+    const end = () => { if (mode === "touch" && moved < 8 && !this.cur()?.sleeping) Room3D.jump(false); mode = null; this.dragging = false; };
+    el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
   },
-  petOnce(x, y) {
-    const a = this.a();
-    Stage3D.wiggle();
-    a.bond = clamp(a.bond + CONFIG.pet.bond);
-    // 1時間あたり、なでる成長ポイントに上限（なで続けるだけで育たないように）
+  /** なでる／ブラシでこする（1時間あたりの成長ポイントに上限） */
+  rub(x, y) {
+    const a = this.cur(); if (!a || a.walk) return;
+    if (a.sleeping) { if (Math.random() < .2) this.say("すやすや…"); return; }
+    const brush = this.tool === "brush";
+    Room3D.wiggle();
     const hour = Math.floor(Date.now() / 3600000);
-    if (a.petHour !== hour) { a.petHour = hour; a.petCare = 0; }
-    a.petTicks = (a.petTicks || 0) + 1;
-    if (a.petTicks >= 4 && a.petCare < CONFIG.pet.maxCarePerHour) { a.petTicks = 0; a.petCare++; this.addCare(CONFIG.pet.care); }
+    if (a.xpHour !== hour) { a.xpHour = hour; a.petXp = 0; a.brushXp = 0; }
+    a.ticks = (a.ticks || 0) + 1;
+    if (brush) { a.clean = clamp(a.clean + CONFIG.brush.clean); a.bond = clamp(a.bond + CONFIG.brush.bond); }
+    else a.bond = clamp(a.bond + CONFIG.pet.bond);
+    if (a.ticks >= 4) {
+      a.ticks = 0;
+      Quest.bump(brush ? "brush" : "pet");
+      if (brush && a.brushXp < CONFIG.brush.xpPerHour) { a.brushXp++; this.addCare(1); }
+      if (!brush && a.petXp < CONFIG.pet.xpPerHour) { a.petXp++; this.addCare(1); }
+    }
     const r = $("stage").getBoundingClientRect();
-    this.heartAt(x - r.left, y - r.top);
-    if (Math.random() < .15) this.say(["きもちいい〜", "もっと！", "えへへ"][Math.floor(Math.random() * 3)]);
+    this.fxAt(x - r.left, y - r.top, brush ? "bubble" : "heartPink", brush ? "spark" : "heart");
+    if (Math.random() < .12) this.say(brush ? ["ぴかぴか！", "さっぱり〜", "いいきもち"][Math.floor(Math.random() * 3)] : ["きもちいい〜", "もっと！", "えへへ"][Math.floor(Math.random() * 3)]);
     Save.store(); this.refresh(false);
   },
-  heartAt(x, y) {
-    const h = document.createElement("span");
-    h.className = "heart"; h.innerHTML = ICONS.heartPink;
-    h.style.left = x + "px"; h.style.top = y + "px";
-    $("fx").appendChild(h); setTimeout(() => h.remove(), 1000);
-  },
-  hearts(n) {
-    const p = Stage3D.headScreen();
-    for (let i = 0; i < n; i++) setTimeout(() => this.heartAt(p.x + (Math.random() - .5) * 80, p.y - 20 + (Math.random() - .5) * 30), i * 150);
-  },
+  fxAt(x, y, icon, cls) { const h = document.createElement("span"); h.className = cls; h.innerHTML = ICONS[icon]; h.style.left = x + "px"; h.style.top = y + "px"; $("fx").appendChild(h); setTimeout(() => h.remove(), 1000); },
+  hearts(n) { const p = Room3D.headScreen(); for (let i = 0; i < n; i++) setTimeout(() => this.fxAt(p.x + rand(-40, 40), p.y - 20 + rand(-15, 15), "heartPink", "heart"), i * 150); },
   sayTimer: 0,
-  say(text, ms = 1800) {
-    const b = $("bubble"); b.textContent = text; b.classList.remove("off");
-    clearTimeout(this.sayTimer); this.sayTimer = setTimeout(() => b.classList.add("off"), ms);
-  },
+  say(text, ms = 1900) { const b = $("bubble"); b.textContent = text; b.classList.remove("off"); clearTimeout(this.sayTimer); this.sayTimer = setTimeout(() => b.classList.add("off"), ms); },
   greet(hours = 0) {
-    const a = this.a(), sp = this.sp();
-    if (hours >= 1) {
-      const h = hours >= 24 ? `${Math.floor(hours / 24)}日` : `${Math.floor(hours)}時間`;
-      if (a.hunger < 30) this.say(`${h}ぶり！ ${sp.name}はおなかがすいてるみたい`, 3500);
-      else this.say(`${h}ぶり！ おかえりなさい`, 3000);
-      return;
-    }
+    const a = this.cur(); if (!a) return;
+    const n = nameOf(this.id());
+    if (a.walk) return;
+    if (hours >= 1) { const h = hours >= 24 ? `${Math.floor(hours / 24)}日` : `${Math.floor(hours)}時間`; this.say(a.hunger < 30 ? `${h}ぶり！ ${n}はおなかがすいてるみたい` : `${h}ぶり！ おかえりなさい`, 3500); return; }
+    if (a.sleeping) { this.say(`${n}は ねているよ`); return; }
     const m = this.mood();
-    if (m === "sad") this.say(a.hunger < 25 ? `${sp.name}はおなかがすいてるみたい` : `${sp.name}は少しつかれてるみたい`, 2800);
-    else if (m === "happy") this.say(`${sp.name}はごきげん！`);
-    else this.say(`${sp.name}がこっちを見てる`);
+    if (m === "sad") this.say(a.hunger < 25 ? `${n}はおなかがすいてるみたい` : a.clean < 15 ? `${n}は よごれてるみたい。ブラシしてあげて` : `${n}は少しつかれてるみたい`, 2800);
+    else if (m === "happy") this.say(`${n}はごきげん！`); else this.say(`${n}がこっちを見てる`);
   },
 };
 
-/* ---------- 7. Farm（はたけ） ---------- */
+/* ---------- 8a. Farm（はたけ） ---------- */
 const Farm = {
-  init() {
-    $("carrotIcon").innerHTML = ICONS.carrot;
-    this.render();
-    setInterval(() => { if (!$("farm").hidden) this.render(); }, 1000);
-  },
+  init() { this.render(); setInterval(() => { if (!$("farm").hidden) this.render(); }, 1000); },
   left(p) { return Math.max(0, p.readyAt - Date.now()) / 1000; },
   render() {
-    $("carrotCount").textContent = Save.data.items.carrot || 0;
-    const wrap = $("plots");
-    // ボタンは作り直さずに中身だけ書き換える（毎秒の更新中でもタップが消えないように）
-    while (wrap.children.length < Save.data.plots.length) {
-      const b = document.createElement("button");
-      b.type = "button";
-      const i = wrap.children.length;
-      b.onclick = (e) => this.tap(i, !!(e.target.closest && e.target.closest(".water")));
-      wrap.appendChild(b);
+    const st = $("cropStock"); st.innerHTML = "";
+    for (const [k, c] of Object.entries(CROPS)) {
+      const have = D().items[c.item] || 0, seeds = c.seedPrice ? (D().seeds[k] || 0) : null;
+      if (!have && !seeds && c.seedPrice) continue;
+      st.insertAdjacentHTML("beforeend", `<span class="chip">${iconOf(c.item)}${ITEMS[c.item].name} <b>${have}</b>${seeds !== null ? `<small>（たね${seeds}）</small>` : ""}</span>`);
     }
-    Save.data.plots.forEach((p, i) => {
-      const b = wrap.children[i];
-      b.className = "plot";
-      let pic, label, water = null;
-      if (p.state === "empty") { pic = "plot0"; label = "たねをまく"; }
+    const wrap = $("plots");
+    while (wrap.children.length < D().plots.length) {
+      const b = document.createElement("button"); b.type = "button"; const i = wrap.children.length;
+      b.onclick = (e) => this.tap(i, !!(e.target.closest && e.target.closest(".water"))); wrap.appendChild(b);
+    }
+    D().plots.forEach((p, i) => {
+      const b = wrap.children[i]; b.className = "plot";
+      let pic, label, water = false;
+      if (p.state === "empty") { pic = ICONS.plot0; label = "たねをまく"; }
       else {
-        const left = this.left(p), total = p.total || CONFIG.growSeconds, prog = 1 - left / total;
-        if (left <= 0) { pic = "plot3"; label = "しゅうかく！"; b.classList.add("ready"); }
-        else {
-          pic = prog < .5 ? "plot1" : "plot2";
-          const secs = Math.ceil(left), m = Math.floor(secs / 60), s = secs % 60;
-          label = m ? `あと${m}分${s}秒` : `あと${secs}秒`;
-          if (!p.watered) water = true;
-        }
+        const c = CROPS[p.crop] || CROPS.carrot, left = this.left(p), prog = 1 - left / (p.total || c.seconds);
+        if (left <= 0) { pic = iconOf(c.item); label = "しゅうかく！"; b.classList.add("ready"); }
+        else { pic = prog < .5 ? ICONS.plot1 : ICONS.plot2; const s = Math.ceil(left), m = Math.floor(s / 60); label = `${ITEMS[c.item].name}<br>あと${m ? `${m}分` : ""}${s % 60}秒`; water = !p.watered; }
       }
-      b.innerHTML = ICONS[pic] + `<small>${label}</small>`;
-      if (water) {
-        const w = document.createElement("span");
-        w.className = "water"; w.textContent = "水やり"; w.setAttribute("role", "button");
-        b.querySelector("small").after(w);
-      }
-      b.setAttribute("aria-label", label);
+      b.innerHTML = pic + `<small>${label}</small>` + (water ? '<span class="water" role="button">水やり</span>' : "");
     });
   },
   tap(i, isWater) {
-    const p = Save.data.plots[i], now = Date.now();
-    if (p.state === "empty") {
-      Save.data.plots[i] = { state: "grow", readyAt: now + CONFIG.growSeconds * 1000, total: CONFIG.growSeconds, watered: false };
-    } else if (this.left(p) <= 0) {
-      const got = Math.random() < .25 ? 2 : 1;
-      Save.data.items.carrot = (Save.data.items.carrot || 0) + got;
-      Save.data.plots[i] = { state: "empty" };
-      toast(`にんじんを ${got}本 しゅうかく！`);
-    } else if (isWater && !p.watered) {
-      const left = p.readyAt - now;
-      p.readyAt = now + left * CONFIG.waterCut; p.watered = true;
-      toast("水をあげた！ 早く育つよ");
-    }
+    const p = D().plots[i], now = Date.now();
+    if (p.state === "empty") { Sheets.seed(i); return; }
+    const c = CROPS[p.crop] || CROPS.carrot;
+    if (this.left(p) <= 0) {
+      const got = Math.round(rand(c.yield[0], c.yield[1]));
+      D().items[c.item] = (D().items[c.item] || 0) + got;
+      D().plots[i] = { state: "empty" };
+      toast(`${ITEMS[c.item].name}を ${got}こ しゅうかく！`); Quest.bump("harvest");
+    } else if (isWater && !p.watered) { p.readyAt = now + (p.readyAt - now) * CONFIG.waterCut; p.watered = true; toast("水をあげた！ 早く育つよ"); }
     Save.store(); this.render(); Care.refresh(false);
+  },
+  plant(i, crop) {
+    const c = CROPS[crop];
+    if (c.seedPrice) { if (!D().seeds[crop]) return; D().seeds[crop]--; }
+    D().plots[i] = { state: "grow", crop, readyAt: Date.now() + c.seconds * 1000, total: c.seconds, watered: false };
+    Save.store(); this.render();
   },
 };
 
-/* 画面下のお知らせ（短い文） */
-function toast(text) {
-  let t = document.getElementById("toast");
-  if (!t) {
-    t = document.createElement("div"); t.id = "toast";
-    Object.assign(t.style, { position: "fixed", left: "50%", bottom: "calc(84px + env(safe-area-inset-bottom, 0px))", transform: "translateX(-50%)",
-      background: "#3b3552", color: "#fff", padding: "8px 16px", borderRadius: "999px", fontWeight: "700", fontSize: "14px",
-      zIndex: 30, transition: "opacity .3s", pointerEvents: "none", whiteSpace: "nowrap" });
-    document.body.appendChild(t);
-  }
-  t.textContent = text; t.style.opacity = "1";
-  clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.style.opacity = "0"), 1800);
-}
-
-/* ---------- 8. Fishing（つり） ----------
-   流れ：なげる → 待つ → うきが沈む(!) → タップ → ゲージ → 黄色でタップ → 釣れた */
+/* ---------- 8b. Fishing（つり） ---------- */
 const Fishing = {
   init() {
-    $("fishIcon").innerHTML = ICONS.fish;
     this.cv = $("fishCanvas"); this.ctx = this.cv.getContext("2d");
     this.state = "idle"; this.t = 0; this.msg = "";
     $("fishBtn").onclick = () => this.button();
     $("fishWrap").addEventListener("pointerdown", () => { if (this.state === "bite" || this.state === "gauge") this.button(); });
+    $("easyMode").checked = !!D().easy;
+    $("easyMode").onchange = (e) => { D().easy = e.target.checked; Save.store(); };
     let last = performance.now();
     const loop = (now) => { requestAnimationFrame(loop); const dt = Math.min(.05, (now - last) / 1000); last = now; if (!$("fish").hidden) this.frame(dt); };
-    requestAnimationFrame(loop);
-    this.render();
+    requestAnimationFrame(loop); this.render();
   },
-  render() { $("fishCount").textContent = Save.data.items.fish || 0; },
+  render() {
+    const st = $("fishStock"); st.innerHTML = "";
+    for (const k of Object.keys(FISHES)) st.insertAdjacentHTML("beforeend", `<span class="chip">${iconOf(k)}${ITEMS[k].name} <b>${D().items[k] || 0}</b></span>`);
+  },
   setBtn(text, on = true) { const b = $("fishBtn"); b.textContent = text; b.disabled = !on; b.style.opacity = on ? 1 : .6; },
   button() {
     if (this.state === "idle" || this.state === "result") {
-      this.state = "wait"; this.t = 0; this.waitFor = CONFIG.biteWait[0] + Math.random() * (CONFIG.biteWait[1] - CONFIG.biteWait[0]);
-      this.msg = ""; this.setBtn("…まってね", false);
+      this.state = "wait"; this.t = 0; this.waitFor = rand(...CONFIG.biteWait); this.msg = ""; this.setBtn("…まってね", false);
     } else if (this.state === "bite") {
+      this.kind = pickWeighted(FISHES, "weight");
+      const f = FISHES[this.kind], easy = D().easy;
       this.state = "gauge"; this.t = 0;
-      this.zone = .22 + Math.random() * .5; this.zoneW = .2; this.speed = 1.1 + Math.random() * .5;
-      this.setBtn("ここ！ でタップ");
+      this.zoneW = f.zone * (easy ? 1.8 : 1); this.zone = rand(.15, .85 - this.zoneW); this.speed = f.speed * (easy ? .6 : 1);
+      this.setBtn("黄色で タップ！");
     } else if (this.state === "gauge") {
-      const x = this.cursor;
-      if (x >= this.zone && x <= this.zone + this.zoneW) {
-        const size = Math.random(); const got = size > .85 ? 3 : size > .5 ? 2 : 1;
-        Save.data.items.fish = (Save.data.items.fish || 0) + got;
-        this.msg = got === 3 ? `大物！ さかな ${got}ひき` : `さかな ${got}ひき つれた！`; this.caught = got;
-        Save.store(); this.render(); Care.refresh(false);
+      if (this.cursor >= this.zone && this.cursor <= this.zone + this.zoneW) {
+        D().items[this.kind] = (D().items[this.kind] || 0) + 1;
+        this.msg = this.kind === "tai" ? "大物！ たいが つれた！" : `${ITEMS[this.kind].name}が つれた！`; this.caught = 1;
+        Quest.bump("fish"); Save.store(); this.render(); Care.refresh(false);
       } else { this.msg = "にげられちゃった…"; this.caught = 0; }
       this.state = "result"; this.t = 0; this.setBtn("もういちど なげる");
     }
@@ -931,51 +1162,32 @@ const Fishing = {
   frame(dt) {
     const cv = this.cv, r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio, 2);
     if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
-    const c = this.ctx, W = cv.width, H = cv.height, u = W / 100;
+    const c = this.ctx, W = cv.width, H = cv.height, u = W / 100, font = getComputedStyle(document.body).fontFamily;
     this.t += dt;
-    if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); if (navigator.vibrate) try { navigator.vibrate(80); } catch (_) {} }
-    if (this.state === "bite" && this.t > CONFIG.biteWindow) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; this.setBtn("もういちど なげる"); }
-    // 空と海
+    if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); try { navigator.vibrate && navigator.vibrate(80); } catch (_) {} }
+    if (this.state === "bite" && this.t > CONFIG.biteWindow * (D().easy ? 1.6 : 1)) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; this.setBtn("もういちど なげる"); }
     c.fillStyle = "#cfe9f3"; c.fillRect(0, 0, W, H * .32);
-    const sea = c.createLinearGradient(0, H * .32, 0, H); sea.addColorStop(0, "#6cc0e8"); sea.addColorStop(1, "#2f86c2");
-    c.fillStyle = sea; c.fillRect(0, H * .32, W, H);
-    // 波
+    const sea = c.createLinearGradient(0, H * .32, 0, H); sea.addColorStop(0, "#6cc0e8"); sea.addColorStop(1, "#2f86c2"); c.fillStyle = sea; c.fillRect(0, H * .32, W, H);
     c.strokeStyle = "rgba(255,255,255,.5)"; c.lineWidth = 1.5 * u;
-    for (let k = 0; k < 5; k++) {
-      c.beginPath(); const yy = H * (.42 + k * .12);
-      for (let x = 0; x <= W; x += 4 * u) c.lineTo(x, yy + Math.sin(x / (8 * u) + performance.now() / 700 + k) * 1.2 * u);
-      c.stroke();
-    }
-    // 雲
-    c.fillStyle = "#fff";
-    [[20, 12, 7], [28, 10, 9], [70, 18, 6], [77, 16, 8]].forEach(([x, y, rr]) => { c.beginPath(); c.arc(x * u, y * u, rr * u, 0, 7); c.fill(); });
-    // 桟橋とペンギン（後ろ姿）
+    for (let k = 0; k < 5; k++) { c.beginPath(); const yy = H * (.42 + k * .12); for (let x = 0; x <= W; x += 4 * u) c.lineTo(x, yy + Math.sin(x / (8 * u) + performance.now() / 700 + k) * 1.2 * u); c.stroke(); }
+    c.fillStyle = "#fff"; [[20, 12, 7], [28, 10, 9], [70, 18, 6], [77, 16, 8]].forEach(([x, y, rr]) => { c.beginPath(); c.arc(x * u, y * u, rr * u, 0, 7); c.fill(); });
     c.fillStyle = "#b98557"; c.fillRect(0, H * .86, W * .38, H * .14);
-    c.fillStyle = "#2f3a52"; c.beginPath(); c.ellipse(16 * u, H * .86 - 9 * u, 7 * u, 10 * u, 0, 0, 7); c.fill();
-    c.beginPath(); c.arc(16 * u, H * .86 - 21 * u, 5.5 * u, 0, 7); c.fill();
+    c.fillStyle = "#2f3a52"; c.beginPath(); c.ellipse(16 * u, H * .86 - 9 * u, 7 * u, 10 * u, 0, 0, 7); c.fill(); c.beginPath(); c.arc(16 * u, H * .86 - 21 * u, 5.5 * u, 0, 7); c.fill();
     c.fillStyle = "#f5a33c"; c.fillRect(11 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u); c.fillRect(17 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u);
-    // つりざお
     const tipX = 46 * u, tipY = H * .86 - 40 * u;
     c.strokeStyle = "#6b4a2b"; c.lineWidth = 1.6 * u; c.beginPath(); c.moveTo(20 * u, H * .86 - 14 * u); c.lineTo(tipX, tipY); c.stroke();
-    // うき
     if (this.state !== "idle") {
-      const bx = 68 * u, base = H * .58;
-      let by = base + Math.sin(performance.now() / 400) * 1.2 * u;
+      const bx = 68 * u, base = H * .58; let by = base + Math.sin(performance.now() / 400) * 1.2 * u;
       if (this.state === "wait" && this.t < .5) by = H * .3 + (base - H * .3) * (this.t / .5);
       if (this.state === "bite") by = base + 4 * u + Math.sin(this.t * 40) * 1.5 * u;
       if (this.state === "gauge" || this.state === "result") by = base + 2 * u;
       c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = .5 * u; c.beginPath(); c.moveTo(tipX, tipY); c.quadraticCurveTo(62 * u, tipY + 10 * u, bx, by - 2.6 * u); c.stroke();
-      c.fillStyle = "#fff"; c.beginPath(); c.arc(bx, by, 2.6 * u, 0, Math.PI); c.fill();
-      c.fillStyle = "#f2564b"; c.beginPath(); c.arc(bx, by, 2.6 * u, Math.PI, 0); c.fill();
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(bx, by, 2.6 * u, 0, Math.PI); c.fill(); c.fillStyle = "#f2564b"; c.beginPath(); c.arc(bx, by, 2.6 * u, Math.PI, 0); c.fill();
       if (this.state === "bite") {
-        c.fillStyle = "#fff"; c.font = `900 ${16 * u}px ${getComputedStyle(document.body).fontFamily}`; c.textAlign = "center";
-        c.lineWidth = 2 * u; c.strokeStyle = "#f2564b"; c.strokeText("！", bx, by - 8 * u); c.fillText("！", bx, by - 8 * u);
-        // 波紋
-        c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = .6 * u;
-        c.beginPath(); c.ellipse(bx, by + 1 * u, (4 + (this.t * 20) % 8) * u, (1.5 + (this.t * 8) % 3) * u, 0, 0, 7); c.stroke();
+        c.fillStyle = "#fff"; c.font = `900 ${16 * u}px ${font}`; c.textAlign = "center"; c.lineWidth = 2 * u; c.strokeStyle = "#f2564b"; c.strokeText("！", bx, by - 8 * u); c.fillText("！", bx, by - 8 * u);
+        c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = .6 * u; c.beginPath(); c.ellipse(bx, by + u, (4 + (this.t * 20) % 8) * u, (1.5 + (this.t * 8) % 3) * u, 0, 0, 7); c.stroke();
       }
     }
-    // ゲージ
     if (this.state === "gauge") {
       this.cursor = (Math.sin(this.t * this.speed * Math.PI) + 1) / 2;
       const gx = 10 * u, gw = 80 * u, gy = H * .16, gh = 6 * u;
@@ -984,63 +1196,214 @@ const Fishing = {
       c.fillStyle = "#f6c453"; c.fillRect(gx + gw * this.zone, gy, gw * this.zoneW, gh);
       c.fillStyle = "#3b3552"; c.fillRect(gx + gw * this.cursor - .8 * u, gy - 2 * u, 1.6 * u, gh + 4 * u);
     }
-    // 結果
-    if (this.state === "result" && this.msg) {
-      c.fillStyle = "rgba(255,255,255,.92)"; roundRect(c, 12 * u, H * .1, 76 * u, 14 * u, 4 * u); c.fill();
-      c.fillStyle = this.caught ? "#3b3552" : "#7d7796"; c.textAlign = "center"; c.textBaseline = "middle";
-      c.font = `900 ${6 * u}px ${getComputedStyle(document.body).fontFamily}`; c.fillText(this.msg, 50 * u, H * .1 + 7 * u);
-      c.textBaseline = "alphabetic";
-    }
-    if (this.state === "idle") {
-      c.fillStyle = "rgba(255,255,255,.92)"; roundRect(c, 16 * u, H * .1, 68 * u, 13 * u, 4 * u); c.fill();
-      c.fillStyle = "#3b3552"; c.textAlign = "center"; c.textBaseline = "middle";
-      c.font = `700 ${5 * u}px ${getComputedStyle(document.body).fontFamily}`; c.fillText("下のボタンで つりざおをなげよう", 50 * u, H * .1 + 6.5 * u);
-      c.textBaseline = "alphabetic";
-    }
+    const box = (text, color, size) => { c.fillStyle = "rgba(255,255,255,.92)"; roundRect(c, 12 * u, H * .1, 76 * u, 14 * u, 4 * u); c.fill(); c.fillStyle = color; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `900 ${size * u}px ${font}`; c.fillText(text, 50 * u, H * .1 + 7 * u); c.textBaseline = "alphabetic"; };
+    if (this.state === "result" && this.msg) box(this.msg, this.caught ? "#3b3552" : "#7d7796", 6);
+    if (this.state === "idle") box("下のボタンで つりざおをなげよう", "#3b3552", 5);
   },
 };
 function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 
-/* ---------- 9. Zukan（ずかん） ---------- */
+/* ---------- 8c. Shop（おみせ） ---------- */
+const BUY_FOOD = { carrot: 10, sunseed: 14, iwashi: 12 };   // ほかの動物のごはんも買える
+const Shop = {
+  render() {
+    const lv = levelOf(D().xp), body = $("shopBody");
+    body.innerHTML = `<h2>おみせ<span class="coins"><span class="cicon">${ICONS.coin}</span><span class="coinv">${D().coins}</span></span></h2><p class="lead">野菜やおさかなを売って、お金をためよう。おせわレベル（いまは Lv${lv}）が上がると、並ぶものが増えます。</p>`;
+    const sec = (title) => { const s = document.createElement("div"); s.className = "sec"; s.innerHTML = `<h3>${title}</h3>`; body.appendChild(s); return s; };
+    const row = (parent, icon, name, sub, buttons, locked) => {
+      const r = document.createElement("div"); r.className = "row" + (locked ? " locked" : "");
+      r.innerHTML = `<span class="ic">${icon}</span><span class="nm"></span><span class="btns"></span>`;
+      r.querySelector(".nm").innerHTML = `${name}<small>${sub}</small>`;
+      for (const [label, fn, ok, cls] of buttons) { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.disabled = !ok; if (cls) b.className = cls; b.onclick = fn; r.querySelector(".btns").appendChild(b); }
+      parent.appendChild(r);
+    };
+    // 売る
+    const sell = sec("うる");
+    const sellable = Object.keys(ITEMS).filter((k) => ITEMS[k].price > 0 && D().items[k] > 0);
+    if (!sellable.length) sell.insertAdjacentHTML("beforeend", '<div class="empty">売れるものがありません。はたけやつりで集めよう</div>');
+    for (const k of sellable) {
+      const n = D().items[k], p = ITEMS[k].price;
+      row(sell, iconOf(k), ITEMS[k].name, `${n}こ もっている・1こ ${p}コイン`, [["1こ", () => this.sell(k, 1), true, "sub2"], ["ぜんぶ", () => this.sell(k, n), true]]);
+    }
+    const buy = (cost, fn) => () => { if (D().coins < cost) { toast("コインが たりないよ"); return; } D().coins -= cost; fn(); Quest.bump("shop"); Save.store(); this.render(); Care.refresh(false); Farm.render(); };
+    // なかま（動物）
+    const pals = sec("なかまを おむかえ");
+    for (const [id, sp] of Object.entries(SPECIES)) {
+      const a = D().animals[id];
+      if (a.owned) continue;
+      const locked = sp.level > lv;
+      row(pals, (ZFACE[id] || ""), locked ? "？？？" : sp.name, locked ? `おせわレベル ${sp.level} で あえるよ` : `${sp.price}コイン・${sp.desc}`,
+        locked ? [] : [[`${sp.price}`, buy(sp.price, () => { a.owned = true; D().current = id; Care.refresh(true); toast(`${sp.name}が おうちに来た！ なまえをつけてあげよう`, 3000); setTimeout(() => { showTab("care"); Sheets.name(); }, 300); }), D().coins >= sp.price]], locked);
+    }
+    if (!pals.querySelector(".row")) pals.insertAdjacentHTML("beforeend", '<div class="empty">いまは みんな おうちにいるよ</div>');
+    // たね
+    const seeds = sec("たね");
+    for (const [k, c] of Object.entries(CROPS)) {
+      if (!c.seedPrice) continue;
+      const locked = c.level > lv, nm = (c.name || ITEMS[c.item].name) + "のたね";
+      row(seeds, ICONS.seedbag(c.color), locked ? "？？？のたね" : nm, locked ? `おせわレベル ${c.level} で ならぶよ` : `${c.seedPrice}コイン・${Math.round(c.seconds / 60)}分で育つ・もっている ${D().seeds[k] || 0}`,
+        locked ? [] : [[`${c.seedPrice}`, buy(c.seedPrice, () => { D().seeds[k] = (D().seeds[k] || 0) + 1; toast(`${nm}を買った！ はたけでまけるよ`); }), D().coins >= c.seedPrice]], locked);
+    }
+    // ごはん・おやつ
+    const food = sec("ごはん・おやつ");
+    row(food, ICONS.cookie, "クッキー（おやつ）", `15コイン・なかよしが たくさん上がる・もっている ${D().items.cookie || 0}`, [["15", buy(15, () => { D().items.cookie = (D().items.cookie || 0) + 1; toast("クッキーを買った！"); }), D().coins >= 15]]);
+    for (const [k, p] of Object.entries(BUY_FOOD)) row(food, iconOf(k), ITEMS[k].name, `${p}コイン・もっている ${D().items[k] || 0}`, [[`${p}`, buy(p, () => { D().items[k] = (D().items[k] || 0) + 1; toast(`${ITEMS[k].name}を買った！`); }), D().coins >= p]]);
+    // おもちゃ
+    const toys = sec("おもちゃ（お部屋にかざると あそぶ時に うれしい）");
+    for (const [k, dc] of Object.entries(DECOR)) {
+      if (dc.shop === null) continue;
+      const locked = (dc.level || 1) > lv, have = D().decor[k] || 0;
+      row(toys, decorIcon(k), locked ? "？？？" : dc.name, locked ? `おせわレベル ${dc.level} で ならぶよ` : `${dc.shop}コイン${have ? "・もっている" : ""}`,
+        locked || have ? [] : [[`${dc.shop}`, buy(dc.shop, () => { D().decor[k] = 1; toast(`${dc.name}を買った！ もようがえで かざろう`); }), D().coins >= dc.shop]], locked);
+    }
+    // きせかえ
+    const wear = sec("きせかえ");
+    for (const [k, w] of Object.entries(WEAR)) {
+      const locked = w.level > lv, have = D().wear.includes(k);
+      row(wear, decorIcon(null, w.color), locked ? "？？？" : w.name, locked ? `おせわレベル ${w.level} で ならぶよ` : have ? "もっている（きせかえボタンで つけられるよ）" : `${w.price}コイン`,
+        locked || have ? [] : [[`${w.price}`, buy(w.price, () => { D().wear.push(k); toast(`${w.name}を買った！`); }), D().coins >= w.price]], locked);
+    }
+  },
+  sell(k, n) {
+    const got = ITEMS[k].price * n;
+    D().items[k] -= n; D().coins += got;
+    toast(`${ITEMS[k].name}を ${n}こ 売って ${got}コイン！`); Quest.bump("sell");
+    Save.store(); this.render(); Care.refresh(false); Farm.render(); Fishing.render();
+  },
+};
+const decorIcon = (id, color) => dotSVG(color || DECOR[id].color);
+
+/* ---------- 8d. Sheets（下から出る画面） ---------- */
+const Sheets = {
+  open(title, build) {
+    this.close();
+    const bg = document.createElement("div"); bg.className = "sheet-bg"; bg.id = "sheetBg";
+    bg.innerHTML = `<div class="sheet" role="dialog" aria-label="${title}"><h3>${title}<button type="button">とじる</button></h3><div class="sbody" style="display:grid;gap:10px"></div></div>`;
+    bg.addEventListener("pointerdown", (e) => { if (e.target === bg) this.close(); });
+    bg.querySelector("h3 button").onclick = () => this.close();
+    document.body.appendChild(bg);
+    build(bg.querySelector(".sbody"));
+  },
+  close() { $("sheetBg")?.remove(); },
+  grid(parent, items) {
+    const g = document.createElement("div"); g.className = "grid2";
+    for (const it of items) { const b = document.createElement("button"); b.type = "button"; b.className = "pick" + (it.on ? " on" : ""); b.innerHTML = `${it.icon}<span>${it.name}</span>${it.sub ? `<small>${it.sub}</small>` : ""}`; b.disabled = !!it.disabled; if (it.disabled) b.style.opacity = .45; b.onclick = it.fn; g.appendChild(b); }
+    parent.appendChild(g);
+  },
+  seed(i) {
+    this.open("なにを まく？", (p) => {
+      this.grid(p, Object.entries(CROPS).filter(([k, c]) => !c.seedPrice || D().seeds[k] > 0).map(([k, c]) => ({
+        icon: iconOf(c.item), name: (c.name || ITEMS[c.item].name), sub: c.seedPrice ? `のこり ${D().seeds[k]}` : "むりょう",
+        fn: () => { Farm.plant(i, k); this.close(); } })));
+      p.insertAdjacentHTML("beforeend", '<p class="note">ほかのたねは おみせで買えます</p>');
+    });
+  },
+  wear() {
+    const id = Care.id(), a = Care.cur();
+    this.open(`${nameOf(id)}の きせかえ`, (p) => {
+      if (!D().wear.length) { p.insertAdjacentHTML("beforeend", '<div class="empty">きせかえは おみせで買えます（おせわレベル2から）</div>'); return; }
+      this.grid(p, [{ icon: decorIcon(null, "#e4e0ee"), name: "なし", on: !a.wear, fn: () => set(null) }, ...D().wear.map((k) => ({ icon: decorIcon(null, WEAR[k].color), name: WEAR[k].name, on: a.wear === k, fn: () => set(k) }))]);
+      const set = (k) => { a.wear = k; Room3D.setWear(k); Save.store(); this.close(); if (k) { Care.say("にあう？"); Room3D.jump(true); } };
+    });
+  },
+  decor() {
+    this.open("もようがえ", (p) => {
+      const owned = Object.keys(D().decor).filter((k) => D().decor[k] > 0);
+      if (!owned.length) { p.insertAdjacentHTML("beforeend", '<div class="empty">まだ かざるものがないよ。おさんぽで拾ってきたり、おみせで おもちゃを買ったりしよう</div>'); return; }
+      for (const [slot, s] of Object.entries(SLOTS)) {
+        const opts = owned.filter((k) => DECOR[k].slot === s.type);
+        if (!opts.length) continue;
+        p.insertAdjacentHTML("beforeend", `<div class="slotlabel">${s.label}</div>`);
+        // 同じものは持っている数までしか置けない
+        const usedElsewhere = (k) => Object.entries(D().room).filter(([sl, v]) => v === k && sl !== slot).length;
+        this.grid(p, [{ icon: decorIcon(null, "#e4e0ee"), name: "なし", on: !D().room[slot], fn: () => put(slot, null) },
+          ...opts.map((k) => ({ icon: decorIcon(k), name: DECOR[k].name, on: D().room[slot] === k, disabled: D().room[slot] !== k && usedElsewhere(k) >= D().decor[k], fn: () => put(slot, k) }))]);
+      }
+      const put = (slot, k) => { D().room[slot] = k; Save.store(); Room3D.buildDecor(); Sheets.decor(); };
+    });
+  },
+  name() {
+    const id = Care.id(); if (!id) return;
+    this.open("なまえを つける", (p) => {
+      p.innerHTML = `<input class="namein" id="nameIn" maxlength="8" placeholder="${SPECIES[id].name}"><button class="okbtn" type="button" id="nameOk">きめる</button>`;
+      const inp = $("nameIn"); inp.value = D().animals[id].name || "";
+      $("nameOk").onclick = () => { D().animals[id].name = inp.value.trim().slice(0, 8); Save.store(); Care.refresh(false); this.close(); Care.say(`よろしくね！`); };
+    });
+  },
+};
+
+/* ---------- 8e. Quest（日替わりのおねがい） ---------- */
+const QUESTS = [
+  { id: "feed", text: "ごはんを 3回 あげる", n: 3, reward: 20 },
+  { id: "pet", text: "なでなでを 6回 する", n: 6, reward: 15 },
+  { id: "brush", text: "ブラッシングを 4回 する", n: 4, reward: 15 },
+  { id: "play", text: "3回 あそぶ", n: 3, reward: 15 },
+  { id: "walk", text: "おさんぽに 1回 いく", n: 1, reward: 20 },
+  { id: "harvest", text: "やさいを 3回 しゅうかく", n: 3, reward: 25 },
+  { id: "fish", text: "おさかなを 2ひき つる", n: 2, reward: 25 },
+  { id: "sell", text: "おみせで 1回 売る", n: 1, reward: 15 },
+  { id: "treat", text: "おやつを 1回 あげる", n: 1, reward: 20 },
+];
+const Quest = {
+  today() { const d = new Date(); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; },
+  ensure() {
+    const day = this.today(), q = D().quest;
+    if (q && q.day === day) return q;
+    // 動物がいないうちは、はたけ・つり・売るのどれか
+    const pool = ownedIds().length ? QUESTS : QUESTS.filter((x) => ["harvest", "fish", "sell"].includes(x.id));
+    let h = 0; for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const pick = pool[h % pool.length];
+    D().quest = { day, id: pick.id, p: 0, done: false };
+    Save.store(); return D().quest;
+  },
+  def() { return QUESTS.find((x) => x.id === this.ensure().id); },
+  bump(type) {
+    const q = this.ensure(); if (q.id !== type || q.done) return;
+    q.p = Math.min(this.def().n, q.p + 1); Save.store(); this.render();
+    if (q.p >= this.def().n) toast("きょうの おねがい たっせい！ ごほうびを受け取ろう", 2600);
+  },
+  render() {
+    const q = this.ensure(), d = this.def(), el = $("quest");
+    el.innerHTML = `<span class="qt">${q.done ? "きょうの おねがい クリア！" : d.text} <small>${q.done ? "またあした" : `${q.p}/${d.n}`}</small></span>`;
+    if (!q.done && q.p >= d.n) { const b = document.createElement("button"); b.type = "button"; b.textContent = `+${d.reward}`; b.onclick = () => { q.done = true; D().coins += d.reward; addXp(3); toast(`ごほうび ${d.reward}コイン！`); Save.store(); Care.refresh(false); }; el.appendChild(b); }
+  },
+};
+
+/* ---------- 8f. Zukan（ずかん） ---------- */
+const ZFACE = {
+  usagi: '<svg viewBox="0 0 64 56"><ellipse cx="14" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="50" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="32" cy="28" rx="19" ry="17" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><circle cx="25" cy="27" r="2.6" fill="#2d2420"/><circle cx="39" cy="27" r="2.6" fill="#2d2420"/><ellipse cx="20" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="44" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="32" cy="32" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
+  pengin: '<svg viewBox="0 0 64 56"><ellipse cx="32" cy="29" rx="19" ry="18" fill="#2f3a52"/><ellipse cx="32" cy="32" rx="14" ry="12" fill="#fbf8f1"/><circle cx="26" cy="29" r="2.4" fill="#1d2230"/><circle cx="38" cy="29" r="2.4" fill="#1d2230"/><path d="M29 34l3 4 3-4z" fill="#f5a33c"/><ellipse cx="22" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/><ellipse cx="42" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/></svg>',
+  hamster: '<svg viewBox="0 0 64 56"><circle cx="17" cy="13" r="6" fill="#f0c27a"/><circle cx="47" cy="13" r="6" fill="#f0c27a"/><circle cx="17" cy="13" r="3.5" fill="#f4a6b6"/><circle cx="47" cy="13" r="3.5" fill="#f4a6b6"/><ellipse cx="32" cy="30" rx="21" ry="18" fill="#f0c27a"/><ellipse cx="20" cy="36" rx="8" ry="7" fill="#fdf6ea"/><ellipse cx="44" cy="36" rx="8" ry="7" fill="#fdf6ea"/><circle cx="25" cy="27" r="2.5" fill="#2d2420"/><circle cx="39" cy="27" r="2.5" fill="#2d2420"/><ellipse cx="32" cy="33" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
+  neko: '<svg viewBox="0 0 64 56"><path d="M14 22L16 4l14 12zM50 22L48 4 34 16z" fill="#eab47a"/><path d="M17 17l1-8 6 6zM47 17l-1-8-6 6z" fill="#f4a6b6"/><ellipse cx="32" cy="30" rx="20" ry="17" fill="#eab47a"/><ellipse cx="32" cy="37" rx="9" ry="6" fill="#fdf6ea"/><path d="M27 16h2M31 15h2M35 16h2" stroke="#c98a4e" stroke-width="2" stroke-linecap="round"/><circle cx="25" cy="28" r="2.6" fill="#2d2420"/><circle cx="39" cy="28" r="2.6" fill="#2d2420"/><ellipse cx="32" cy="34" rx="2" ry="1.4" fill="#f4a6b6"/></svg>',
+};
 const Zukan = {
   render() {
     const g = $("zgrid"); g.textContent = "";
     for (const [id, sp] of Object.entries(SPECIES)) {
-      const a = Save.data.animals[id];
-      const card = document.createElement("div"); card.className = "zcard";
-      const face = id === "usagi" ? ZFACE.usagi : ZFACE.pengin;
-      card.innerHTML = `<div class="zface">${face || ""}</div><b></b><p></p><div class="zstages"></div>`;
-      card.querySelector("b").textContent = sp.name;
+      const a = D().animals[id], card = document.createElement("div");
+      if (!a.owned) { card.className = "zcard lock"; card.innerHTML = `<div class="zface"></div><b>？？？</b><p>おせわレベル ${sp.level} になると、おみせで あえるよ</p>`; g.appendChild(card); continue; }
+      card.className = "zcard";
+      card.innerHTML = `<div class="zface">${ZFACE[id] || ""}</div><b></b><p></p><div class="zstages"></div>`;
+      card.querySelector("b").textContent = a.name ? `${a.name}（${sp.name}）` : sp.name;
       card.querySelector("p").textContent = sp.desc;
-      const st = card.querySelector(".zstages");
-      CONFIG.stages.forEach((s, i) => {
-        const sp2 = document.createElement("span");
-        const got = a.seen.includes(i);
-        sp2.textContent = got ? s.name : "？？？"; if (got) sp2.className = "got";
-        st.appendChild(sp2);
-      });
+      CONFIG.stages.forEach((s, i) => { const t = document.createElement("span"); const got = a.seen.includes(i); t.textContent = got ? s.name : "？？？"; if (got) t.className = "got"; card.querySelector(".zstages").appendChild(t); });
       g.appendChild(card);
     }
-    for (let i = 0; i < LOCKED_SLOTS; i++) {
-      const card = document.createElement("div"); card.className = "zcard lock";
-      card.innerHTML = `<div class="zface"></div><b>？？？</b><p>まだ見ぬなかま</p>`;
-      g.appendChild(card);
-    }
+    for (let i = 0; i < FUTURE_SLOTS; i++) g.insertAdjacentHTML("beforeend", '<div class="zcard lock"><div class="zface"></div><b>？？？</b><p>まだ見ぬなかま</p></div>');
   },
 };
-const ZFACE = {
-  usagi: '<svg viewBox="0 0 64 56"><ellipse cx="14" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="50" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="32" cy="28" rx="19" ry="17" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><circle cx="25" cy="27" r="2.6" fill="#2d2420"/><circle cx="39" cy="27" r="2.6" fill="#2d2420"/><ellipse cx="20" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="44" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="32" cy="32" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
-  pengin: '<svg viewBox="0 0 64 56"><ellipse cx="32" cy="29" rx="19" ry="18" fill="#2f3a52"/><ellipse cx="32" cy="32" rx="14" ry="12" fill="#fbf8f1"/><circle cx="26" cy="29" r="2.4" fill="#1d2230"/><circle cx="38" cy="29" r="2.4" fill="#1d2230"/><path d="M29 34l3 4 3-4z" fill="#f5a33c"/><ellipse cx="22" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/><ellipse cx="42" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/></svg>',
-};
 
-/* ---------- 10. 起動 ---------- */
+/* ---------- 9. 起動 ---------- */
+function toast(text, ms = 1900) { const t = $("toast"); t.textContent = text; t.style.opacity = "1"; clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.style.opacity = "0"), ms); }
 function showTab(name) {
+  Sheets.close();
   document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
-  ["care", "farm", "fish", "zukan"].forEach((n) => ($(n).hidden = n !== name));
-  Stage3D.running = name === "care";
-  if (name === "care") { Stage3D.resize(); Care.refresh(false); }
+  ["care", "farm", "fish", "shop", "zukan"].forEach((n) => ($(n).hidden = n !== name));
+  Room3D.running = name === "care";
+  if (name === "care") { Room3D.resize(); Care.refresh(false); }
   if (name === "farm") Farm.render();
   if (name === "fish") Fishing.render();
+  if (name === "shop") Shop.render();
   if (name === "zukan") Zukan.render();
 }
 
@@ -1048,28 +1411,25 @@ Save.load();
 const away = applyTime();
 Save.store();
 document.querySelectorAll("[data-icon]").forEach((s) => (s.innerHTML = ICONS[s.dataset.icon]));
+document.querySelectorAll(".cicon").forEach((s) => (s.innerHTML = ICONS.coin));
 document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
-Stage3D.init($("stage"));
+Room3D.init($("stage"));
 Care.init();
 Farm.init();
 Fishing.init();
-setTimeout(() => Care.greet(away), 400);
+Care.checkWalks();
+setTimeout(() => { Care.greet(away); if (!ownedIds().length) toast("ようこそ！ まずは はたけで にんじんを育ててみよう", 3500); }, 400);
 
-// 開いている間も1分ごとに時間を進める
-setInterval(() => { applyTime(); Save.store(); Care.refresh(false); }, 60000);
-// 別のアプリから戻ってきたときにも時間を進める
+// 開いている間：1秒ごとにおさんぽの帰りを確認、1分ごとに時間を進める
+setInterval(() => { Care.checkWalks(); const a = Care.cur(); if (a?.walk && !$("care").hidden) Care.refresh(false); }, 1000);
+setInterval(() => { applyTime(); Save.store(); Care.refresh(false); Room3D.applyDayNight(); }, 60000);
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") { const h = applyTime(); Save.store(); Care.refresh(false); if (h >= 1) Care.greet(h); }
+  if (document.visibilityState === "visible") { const h = applyTime(); Care.checkWalks(); Save.store(); Care.refresh(false); if (h >= 1) Care.greet(h); }
 });
-
-// データのリセット
 $("resetBtn").onclick = () => ($("resetConfirm").hidden = false);
 $("resetNo").onclick = () => ($("resetConfirm").hidden = true);
-$("resetYes").onclick = () => { Save.reset(); $("resetConfirm").hidden = true; Care.refresh(true); Farm.render(); Fishing.render(); Zukan.render(); toast("はじめからにしました"); };
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
-}
+$("resetYes").onclick = () => { Save.reset(); $("resetConfirm").hidden = true; Care.refresh(true); Room3D.buildDecor(); Farm.render(); Fishing.render(); Zukan.render(); toast("はじめからにしました"); };
+if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 </script>
 </body>
 </html>
