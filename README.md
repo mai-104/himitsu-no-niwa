@@ -149,6 +149,7 @@ ribbon: { name: "リボン", price: 40, level: 2, color: "#f47b9b", png: "images
 
 | ファイル | 中身 | 作りかた |
 |---|---|---|
+| `models/hamster.glb` | ハムスター（全段階共通） | Meshy 6 Lite（無料プラン・CC BY 4.0）。下と同じ加工 |
 | `models/penguin_gray.glb` | ペンギン（灰色・あかちゃんとこども） | Meshy 6 Lite（無料プラン・CC BY 4.0）。下と同じ加工 |
 | `models/penguin.glb` | ペンギン（紺・おとな） | Meshy 6 Lite（無料プラン・CC BY 4.0）。画像を軽くするため、色の画像を1024pxにし、金属っぽさ・凹凸の画像は外し、表面の光の当たり方をなめらかに直しています |
 
