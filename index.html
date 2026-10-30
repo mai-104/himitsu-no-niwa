@@ -637,18 +637,18 @@ function buildPenguin(look = {}) {
     for (const t of [-1, 0, 1]) ell(yellow, .09, 1, .7, 1, .4 * s + t * .14, .07, .76, body);
   }
   const arms = [-1, 1].map((s) => {                                  // まるいつばさ
-    const g = new THREE.Group(); g.position.set(.9 * s, 1.45, -.05); body.add(g);
-    ell(navy, .32, .38, 1.25, .75, 0, -.33, 0, g); g.userData.side = s; return g;
+    const g = new THREE.Group(); g.position.set(.95 * s, 1.5, -.05); body.add(g);
+    ell(navy, .42, .45, 1.2, .8, 0, -.4, 0, g); g.userData.side = s; return g;
   });
   const head = new THREE.Group(); head.position.set(0, 2.05, .05); body.add(head);
   ell(navy, .86, 1.04, .96, 1, 0, 0, 0, head);                      // 頭（大きくまるく）
   // ハート形の白い顔：目のまわりの2つのふくらみ＋下のつながり
-  //（頭の表面から少しだけ出るように、深めの形を前にずらして重ねる）
-  for (const s of [-1, 1]) ell(white, .52, .74, 1.08, .9, .27 * s, -.04, .42, head);
-  ell(white, .58, 1.12, .72, .9, 0, -.2, .36, head);
-  const beak = ell(yellow, .13, 1.15, .65, 1.1, 0, -.12, .92, head);   // くちばし
-  for (const s of [-1, 1]) ell(pink, .11, 1, .6, .3, .46 * s, -.2, .8, head);
-  const eyes = addEyes(head, .27, .05, .83, .09);
+  //（頭と同じ丸みの小さな形を前にずらして3つ重ねると、でこぼこせずにハート形になる）
+  for (const s of [-1, 1]) ell(white, .86 * .62, 1.04, .96 * 1.05, 1, .24 * s, 0, .36, head);
+  ell(white, .86 * .7, 1.04, .96 * .8, 1, 0, -.2, .3, head);
+  const beak = ell(yellow, .13, 1.15, .65, 1.1, 0, -.12, .93, head);   // くちばし
+  for (const s of [-1, 1]) ell(pink, .11, 1, .6, .3, .44 * s, -.2, .83, head);
+  const eyes = addEyes(head, .27, .05, .86, .09);
   return makeRig(root, body, head, { eyes, arms, tail, nose: beak, earType: "flipper", anchor: anchorOn(head, .8) });
 }
 function buildHamster(look = {}) {
