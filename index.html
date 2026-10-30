@@ -412,10 +412,12 @@ const WEAR = {
 //   looks: 成長段階ごとの色 [あかちゃん, こども, おとな]。書いた色だけ変わる（{} はふつうの色）
 //          使える色の名前：うさぎ fur/inner/pink、ペンギン body/belly/beak/cheek、ハムスター fur/white/pink、ねこ fur/white/stripe/pink
 //   glb: 3Dモデル。1つなら全段階共通、[あかちゃん, こども, おとな] のように段階ごとにも書ける（null の段階は作った見た目）
+//   scales: 成長段階ごとの大きさ [あかちゃん, こども, おとな]（書かなければ CONFIG.stages の scale）
 //   glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示（その時は全身の動きだけ）
 const SPECIES = {
   usagi:   { name: "うさぎ",     price: 40,  level: 1, foods: ["carrot", "strawberry", "pumpkin"], desc: "たれ耳のふわふわうさぎ。にんじんが大好き。", glb: null, build: buildRabbit },
-  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: "models/penguin.glb", build: buildPenguin,   // Meshy 6 Lite で作ったモデル
+  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: ["models/penguin_gray.glb", "models/penguin_gray.glb", "models/penguin.glb"], build: buildPenguin,   // Meshy 6 Lite で作ったモデル（あかちゃん・こどもは灰色）
+             scales: [.55, .75, 1],
              looks: [{ body: 0x9095a0 }, { body: 0x5b6784 }, {}] },   // あかちゃんは灰色、こどもは灰色と紺のあいだ
   hamster: { name: "ハムスター", price: 160, level: 3, foods: ["sunseed", "strawberry", "pumpkin"], desc: "ほっぺがふくらむハムスター。ひまわりのたねが好き。", glb: null, build: buildHamster },
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
@@ -868,7 +870,7 @@ const Room3D = {
     const sp = this.rig && SPECIES[this.rig.id];
     if (celebrate && sp && (sp.looks || Array.isArray(sp.glb)) && this.shownStage !== stage) { const r = this.rotY; this.show(this.rig.id); this.rotY = r; }
     const st = CONFIG.stages[stage];
-    this.baseScale = st.scale;
+    this.baseScale = (sp && sp.scales && sp.scales[stage]) || st.scale;
     if (this.rig?.head) this.rig.head.scale.setScalar(st.head);
     if (celebrate) { this.anim.jump = 0; this.anim.spin = true; }
   },
