@@ -28,6 +28,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
 button:disabled { cursor: default; }
 [hidden] { display: none !important; }
+img.pimg { display: block; object-fit: contain; }
+.act .pimg { width: 26px; height: 26px; } .tab .pimg { width: 24px; height: 24px; } .coins .pimg { width: 16px; height: 16px; }
+.chip .pimg { width: 22px; height: 22px; } .row .ic .pimg, .pick .pimg { width: 34px; height: 34px; } .zface .pimg { height: 56px; width: auto; }
+.plot .pimg { width: 66%; height: auto; align-self: end; } .flyfood .pimg { width: 44px; height: 44px; } .heart .pimg, .spark .pimg { width: 100%; height: 100%; }
 #app { height: 100%; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
 .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -338,7 +342,19 @@ const ICONS = {
   plot1: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="34" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34v-8" stroke="#5fae5c" stroke-width="3" stroke-linecap="round"/><path d="M24 28c-3-4-7-5-10-4 2 4 6 5 10 4zm0-1c2-4 6-6 10-5-2 4-6 6-10 5z" fill="#6fbf73"/></svg>',
   plot2: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="35" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34c-1-10-6-16-12-18 1 7 6 14 12 18zm0 0c0-10 3-19 8-22 1 8-2 16-8 22zm0 0c3-8 9-12 15-11-2 6-8 10-15 11z" fill="#5fae5c"/></svg>',
 };
-const iconOf = (key) => typeof ICONS[key] === "string" ? ICONS[key] : "";
+/* ===== 画像の差し替え =====
+   ここにファイル名を書くと、その絵が画像に置きかわります（null や書いていないものは今の絵のまま）。
+   画像は同じリポジトリの images フォルダに入れて "images/ファイル名.png" のように書きます。
+   書ける名前（キー）の一覧は README.md にあります。例：
+     carrot: "images/carrot.png",        ← にんじん（はたけ・おみせ・ごはんボタン）
+     seed_sunflower: "images/seed_sunflower.png",  ← ひまわりのたね袋
+     decor_plant: "images/decor_plant.png",        ← かんようしょくぶつ のアイコン
+     face_usagi: "images/face_usagi.png",          ← 図鑑・おみせの うさぎの顔
+     coin: "images/coin.png",  pet: "images/btn_pet.png",  heart: "images/tab_care.png" … */
+const IMAGES = {
+};
+const pic = (key, fallback) => IMAGES[key] ? `<img class="pimg" src="${IMAGES[key]}" alt="">` : (fallback !== undefined ? fallback : (typeof ICONS[key] === "string" ? ICONS[key] : ""));
+const iconOf = (key) => pic(key);
 
 /* ---------- 3. カタログ ---------- */
 // 野菜・魚・おやつ（持ち物）。price＝売るときの値段
@@ -368,6 +384,8 @@ const FISHES = {
   tai:    { weight: 5,  zone: .11, speed: 1.7 },
 };
 // 家具・かざり。slot＝置ける場所(floor/wall/rug)、shop＝お店の値段(nullは非売品＝おさんぽで拾える)、toy＝あそぶ時にうれしい
+//   見た目の差し替え：glb: "models/plant.glb"（3Dモデル） または png: "images/plant.png"（画像を板にして立てる）を足す
+//   size: で大きさ（床の物は高さ、かべの物は高さ、ラグは幅。単位はだいたい「動物の高さ＝2.8」）
 const DECOR = {
   plant:   { name: "かんようしょくぶつ", slot: "floor", shop: null, color: "#5fae5c" },
   lamp:    { name: "スタンドライト",     slot: "floor", shop: null, color: "#f6c453" },
@@ -383,7 +401,7 @@ const DECOR = {
   blocks:  { name: "つみき",             slot: "floor", shop: 45, toy: true, level: 2, color: "#7fcfc4" },
   bear:    { name: "くまのぬいぐるみ",   slot: "floor", shop: 80, toy: true, level: 4, color: "#c9976a" },
 };
-// きせかえ（頭の上にのせる）
+// きせかえ（頭の上にのせる）。glb: または png: を足すと見た目が差し替わる（size: で大きさ）
 const WEAR = {
   ribbon: { name: "リボン",         price: 40,  level: 2, color: "#f47b9b" },
   hat:    { name: "ちいさなぼうし", price: 60,  level: 3, color: "#7b7fc9" },
@@ -399,6 +417,14 @@ const SPECIES = {
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
 };
 const FUTURE_SLOTS = 1;   // 図鑑の「まだ見ぬなかま」の枠
+// お部屋の床・かべ・まどの外、つりの背景を画像にするとき（null のままなら今の色）
+const ROOM_IMAGES = {
+  floor: null,      // 例 "images/room_floor.png"（くり返して敷きつめます）
+  wall: null,       // 例 "images/room_wall.png"
+  window: null,     // 例 "images/room_window_day.png"（まどの外の景色・昼）
+  windowNight: null,// 例 "images/room_window_night.png"（夜）
+  fishScene: null,  // 例 "images/fish_scene.png"（つりの背景。ペンギンと桟橋もこの絵に描いておく）
+};
 
 /* ---------- 4. Save ---------- */
 const SAVE_KEY = "doubutsu-save-v1";
@@ -600,6 +626,37 @@ function buildWear(id) {
   return g;
 }
 
+/* 差し替え用：glb（3Dモデル）か png（画像の板）があればそれを、なければ作った形を使う
+   kind: "floor"（床に立てる） / "wall"（かべに貼る） / "rug"（床に敷く） / "wear"（頭にのせる） */
+const texLoader = new THREE.TextureLoader();
+function swapOr(def, kind, fallback) {
+  if (!def.glb && !def.png) return fallback();
+  const g = new THREE.Group();
+  const size = def.size || { floor: 1.1, wall: .9, rug: 2.4, wear: .45 }[kind];
+  if (def.glb) {
+    loadGLB(def.glb, kind === "rug" ? .05 : size).then(({ obj, top }) => {
+      if (kind === "wall") obj.position.y -= top / 2;
+      g.add(obj);
+    }).catch(() => g.add(fallback()));
+  } else {
+    texLoader.load(def.png, (tex) => {
+      const ar = tex.image.width / tex.image.height;
+      const w = kind === "rug" ? size : size * ar, h = kind === "rug" ? size / ar : size;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: .05, roughness: .9, side: THREE.DoubleSide }));
+      if (kind === "rug") { m.rotation.x = -Math.PI / 2; m.position.y = .02; }
+      else if (kind === "floor" || kind === "wear") m.position.y = h / 2;
+      else m.position.z = .02;
+      g.add(m);
+    }, undefined, () => g.add(fallback()));
+  }
+  return g;
+}
+function roomTex(path, repeat) {
+  const t = texLoader.load(path);
+  if (repeat) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(repeat[0], repeat[1]); }
+  return t;
+}
+
 /* ---------- 6. Room3D（お部屋） ---------- */
 // 置き場所。floor は床、wall は奥のかべ、rug は動物の足もと
 const SLOTS = {
@@ -623,14 +680,15 @@ const Room3D = {
     this.sun = new THREE.DirectionalLight(0xffffff, .75); this.sun.position.set(3, 7, 5); this.scene.add(this.sun);
     this.lampLight = new THREE.PointLight(0xffc98a, 0, 9); this.lampLight.position.set(0, 3, 1.5); this.scene.add(this.lampLight);
     // 床とかべ
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 5), M(0xe8c9a0)); floor.rotation.x = -Math.PI / 2; this.scene.add(floor);
-    for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.02, 5), M(0xd3b085)); l.rotation.x = -Math.PI / 2; l.position.set(-2.5 + i, .002, 0); this.scene.add(l); }
-    this.wallMat = M(0xfbefe6);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(6, 5), ROOM_IMAGES.floor ? M(0xffffff, { map: roomTex(ROOM_IMAGES.floor, [3, 2.5]) }) : M(0xe8c9a0)); floor.rotation.x = -Math.PI / 2; this.scene.add(floor);
+    if (!ROOM_IMAGES.floor) for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(.02, 5), M(0xd3b085)); l.rotation.x = -Math.PI / 2; l.position.set(-2.5 + i, .002, 0); this.scene.add(l); }
+    this.wallMat = ROOM_IMAGES.wall ? M(0xffffff, { map: roomTex(ROOM_IMAGES.wall, [3, 2]) }) : M(0xfbefe6);
     const back = new THREE.Mesh(new THREE.PlaneGeometry(6, 4.2), this.wallMat); back.position.set(0, 2.1, -2.5); this.scene.add(back);
     const left = new THREE.Mesh(new THREE.PlaneGeometry(5, 4.2), this.wallMat); left.rotation.y = Math.PI / 2; left.position.set(-3, 2.1, 0); this.scene.add(left);
     const base = new THREE.Mesh(new THREE.BoxGeometry(6, .2, .05), M(0xd9b48a)); base.position.set(0, .1, -2.48); this.scene.add(base);
     // まど（外の色が時間で変わる）
     this.winMat = new THREE.MeshBasicMaterial({ color: 0xbfe6f5 });
+    this.winTex = { day: ROOM_IMAGES.window ? roomTex(ROOM_IMAGES.window) : null, night: ROOM_IMAGES.windowNight ? roomTex(ROOM_IMAGES.windowNight) : null };
     const win = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.1), this.winMat); win.position.set(0, 2.75, -2.49); this.scene.add(win);
     const frame = M(0xffffff);
     for (const [w, h, x, y] of [[1.45, .08, 0, 3.32], [1.45, .08, 0, 2.18], [.08, 1.2, -.68, 2.75], [.08, 1.2, .68, 2.75], [.05, 1.1, 0, 2.75], [1.3, .05, 0, 2.75]]) { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, .04), frame); b.position.set(x, y, -2.47); this.scene.add(b); }
@@ -666,7 +724,7 @@ const Room3D = {
     while (this.decorGroup.children.length) this.decorGroup.remove(this.decorGroup.children[0]);
     for (const [slot, id] of Object.entries(D().room)) {
       if (!id || !DECOR[id] || !SLOTS[slot]) continue;
-      const o = buildDecor(id), p = SLOTS[slot].pos;
+      const o = swapOr(DECOR[id], DECOR[id].slot, () => buildDecor(id)), p = SLOTS[slot].pos;
       o.position.set(p[0], p[1], p[2]);
       if (SLOTS[slot].type === "floor") o.rotation.y = -p[0] * .12;
       this.decorGroup.add(o);
@@ -676,8 +734,11 @@ const Room3D = {
   applyDayNight() {
     const h = new Date().getHours();
     const night = h >= 19 || h < 5, eve = h >= 16 && h < 19, morn = h >= 5 && h < 8;
-    this.winMat.color.set(night ? 0x1f2a5c : eve ? 0xf5b38a : morn ? 0xffe2c4 : 0xbfe6f5);
-    this.stars.visible = night;
+    const wt = night ? (this.winTex.night || this.winTex.day) : this.winTex.day;
+    if (wt) { this.winMat.map = wt; this.winMat.color.set(night && !this.winTex.night ? 0x445080 : eve ? 0xffd9c0 : 0xffffff); }
+    else { this.winMat.map = null; this.winMat.color.set(night ? 0x1f2a5c : eve ? 0xf5b38a : morn ? 0xffe2c4 : 0xbfe6f5); }
+    this.winMat.needsUpdate = true;
+    this.stars.visible = night && !wt;
     const sleeping = Care.cur()?.sleeping;
     const dark = night || sleeping;
     this.hemi.intensity = dark ? .38 : eve ? .6 : .75;
@@ -714,7 +775,7 @@ const Room3D = {
   setWear(id) {
     if (!this.rig?.anchor) return;
     while (this.rig.anchor.children.length) this.rig.anchor.remove(this.rig.anchor.children[0]);
-    if (id && WEAR[id]) this.rig.anchor.add(buildWear(id));
+    if (id && WEAR[id]) this.rig.anchor.add(swapOr(WEAR[id], "wear", () => buildWear(id)));
   },
   hit(x, y) {
     if (!this.rig || !this.rig.root.visible) return false;
@@ -813,12 +874,12 @@ const Room3D = {
 
 /* 3Dモデル（GLB）の読み込み。使う時だけ部品を読み込む */
 let gltfLoaderPromise = null;
-function loadGLB(path) {
+function loadGLB(path, height = 2.8) {
   if (!gltfLoaderPromise) gltfLoaderPromise = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"; s.onload = () => res(new THREE.GLTFLoader()); s.onerror = rej; document.head.appendChild(s); });
   return gltfLoaderPromise.then((loader) => new Promise((res, rej) => loader.load(path, (g) => {
     const obj = g.scene, box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
     box.getSize(size); box.getCenter(c);
-    const k = 2.8 / Math.max(size.y, .001);
+    const k = height / Math.max(size.y, .001);
     obj.scale.setScalar(k); obj.position.set(-c.x * k, -box.min.y * k, -c.z * k);
     res({ obj, top: size.y * k });
   }, undefined, rej)));
@@ -1059,7 +1120,7 @@ const Care = {
     if (Math.random() < .12) this.say(brush ? ["ぴかぴか！", "さっぱり〜", "いいきもち"][Math.floor(Math.random() * 3)] : ["きもちいい〜", "もっと！", "えへへ"][Math.floor(Math.random() * 3)]);
     Save.store(); this.refresh(false);
   },
-  fxAt(x, y, icon, cls) { const h = document.createElement("span"); h.className = cls; h.innerHTML = ICONS[icon]; h.style.left = x + "px"; h.style.top = y + "px"; $("fx").appendChild(h); setTimeout(() => h.remove(), 1000); },
+  fxAt(x, y, icon, cls) { const h = document.createElement("span"); h.className = cls; h.innerHTML = pic(icon); h.style.left = x + "px"; h.style.top = y + "px"; $("fx").appendChild(h); setTimeout(() => h.remove(), 1000); },
   hearts(n) { const p = Room3D.headScreen(); for (let i = 0; i < n; i++) setTimeout(() => this.fxAt(p.x + rand(-40, 40), p.y - 20 + rand(-15, 15), "heartPink", "heart"), i * 150); },
   sayTimer: 0,
   say(text, ms = 1900) { const b = $("bubble"); b.textContent = text; b.classList.remove("off"); clearTimeout(this.sayTimer); this.sayTimer = setTimeout(() => b.classList.add("off"), ms); },
@@ -1094,11 +1155,11 @@ const Farm = {
     D().plots.forEach((p, i) => {
       const b = wrap.children[i]; b.className = "plot";
       let pic, label, water = false;
-      if (p.state === "empty") { pic = ICONS.plot0; label = "たねをまく"; }
+      if (p.state === "empty") { pic = iconOf("plot0"); label = "たねをまく"; }
       else {
         const c = CROPS[p.crop] || CROPS.carrot, left = this.left(p), prog = 1 - left / (p.total || c.seconds);
         if (left <= 0) { pic = iconOf(c.item); label = "しゅうかく！"; b.classList.add("ready"); }
-        else { pic = prog < .5 ? ICONS.plot1 : ICONS.plot2; const s = Math.ceil(left), m = Math.floor(s / 60); label = `${ITEMS[c.item].name}<br>あと${m ? `${m}分` : ""}${s % 60}秒`; water = !p.watered; }
+        else { pic = iconOf(prog < .5 ? "plot1" : "plot2"); const s = Math.ceil(left), m = Math.floor(s / 60); label = `${ITEMS[c.item].name}<br>あと${m ? `${m}分` : ""}${s % 60}秒`; water = !p.watered; }
       }
       b.innerHTML = pic + `<small>${label}</small>` + (water ? '<span class="water" role="button">水やり</span>' : "");
     });
@@ -1166,6 +1227,10 @@ const Fishing = {
     this.t += dt;
     if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); try { navigator.vibrate && navigator.vibrate(80); } catch (_) {} }
     if (this.state === "bite" && this.t > CONFIG.biteWindow * (D().easy ? 1.6 : 1)) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; this.setBtn("もういちど なげる"); }
+    if (ROOM_IMAGES.fishScene && !this.bg) { this.bg = new Image(); this.bg.src = ROOM_IMAGES.fishScene; }
+    const useBg = this.bg && this.bg.complete && this.bg.naturalWidth;
+    if (useBg) { const ir = this.bg.naturalWidth / this.bg.naturalHeight, cr = W / H; let sw = this.bg.naturalWidth, sh = this.bg.naturalHeight, sx = 0, sy = 0; if (ir > cr) { sw = sh * cr; sx = (this.bg.naturalWidth - sw) / 2; } else { sh = sw / cr; sy = (this.bg.naturalHeight - sh) / 2; } c.drawImage(this.bg, sx, sy, sw, sh, 0, 0, W, H); }
+    else {
     c.fillStyle = "#cfe9f3"; c.fillRect(0, 0, W, H * .32);
     const sea = c.createLinearGradient(0, H * .32, 0, H); sea.addColorStop(0, "#6cc0e8"); sea.addColorStop(1, "#2f86c2"); c.fillStyle = sea; c.fillRect(0, H * .32, W, H);
     c.strokeStyle = "rgba(255,255,255,.5)"; c.lineWidth = 1.5 * u;
@@ -1174,6 +1239,7 @@ const Fishing = {
     c.fillStyle = "#b98557"; c.fillRect(0, H * .86, W * .38, H * .14);
     c.fillStyle = "#2f3a52"; c.beginPath(); c.ellipse(16 * u, H * .86 - 9 * u, 7 * u, 10 * u, 0, 0, 7); c.fill(); c.beginPath(); c.arc(16 * u, H * .86 - 21 * u, 5.5 * u, 0, 7); c.fill();
     c.fillStyle = "#f5a33c"; c.fillRect(11 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u); c.fillRect(17 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u);
+    }
     const tipX = 46 * u, tipY = H * .86 - 40 * u;
     c.strokeStyle = "#6b4a2b"; c.lineWidth = 1.6 * u; c.beginPath(); c.moveTo(20 * u, H * .86 - 14 * u); c.lineTo(tipX, tipY); c.stroke();
     if (this.state !== "idle") {
@@ -1208,7 +1274,7 @@ const BUY_FOOD = { carrot: 10, sunseed: 14, iwashi: 12 };   // ほかの動物�
 const Shop = {
   render() {
     const lv = levelOf(D().xp), body = $("shopBody");
-    body.innerHTML = `<h2>おみせ<span class="coins"><span class="cicon">${ICONS.coin}</span><span class="coinv">${D().coins}</span></span></h2><p class="lead">野菜やおさかなを売って、お金をためよう。おせわレベル（いまは Lv${lv}）が上がると、並ぶものが増えます。</p>`;
+    body.innerHTML = `<h2>おみせ<span class="coins"><span class="cicon">${iconOf("coin")}</span><span class="coinv">${D().coins}</span></span></h2><p class="lead">野菜やおさかなを売って、お金をためよう。おせわレベル（いまは Lv${lv}）が上がると、並ぶものが増えます。</p>`;
     const sec = (title) => { const s = document.createElement("div"); s.className = "sec"; s.innerHTML = `<h3>${title}</h3>`; body.appendChild(s); return s; };
     const row = (parent, icon, name, sub, buttons, locked) => {
       const r = document.createElement("div"); r.className = "row" + (locked ? " locked" : "");
@@ -1232,7 +1298,7 @@ const Shop = {
       const a = D().animals[id];
       if (a.owned) continue;
       const locked = sp.level > lv;
-      row(pals, (ZFACE[id] || ""), locked ? "？？？" : sp.name, locked ? `おせわレベル ${sp.level} で あえるよ` : `${sp.price}コイン・${sp.desc}`,
+      row(pals, pic("face_" + id, ZFACE[id] || ""), locked ? "？？？" : sp.name, locked ? `おせわレベル ${sp.level} で あえるよ` : `${sp.price}コイン・${sp.desc}`,
         locked ? [] : [[`${sp.price}`, buy(sp.price, () => { a.owned = true; D().current = id; Care.refresh(true); toast(`${sp.name}が おうちに来た！ なまえをつけてあげよう`, 3000); setTimeout(() => { showTab("care"); Sheets.name(); }, 300); }), D().coins >= sp.price]], locked);
     }
     if (!pals.querySelector(".row")) pals.insertAdjacentHTML("beforeend", '<div class="empty">いまは みんな おうちにいるよ</div>');
@@ -1241,12 +1307,12 @@ const Shop = {
     for (const [k, c] of Object.entries(CROPS)) {
       if (!c.seedPrice) continue;
       const locked = c.level > lv, nm = (c.name || ITEMS[c.item].name) + "のたね";
-      row(seeds, ICONS.seedbag(c.color), locked ? "？？？のたね" : nm, locked ? `おせわレベル ${c.level} で ならぶよ` : `${c.seedPrice}コイン・${Math.round(c.seconds / 60)}分で育つ・もっている ${D().seeds[k] || 0}`,
+      row(seeds, pic("seed_" + k, ICONS.seedbag(c.color)), locked ? "？？？のたね" : nm, locked ? `おせわレベル ${c.level} で ならぶよ` : `${c.seedPrice}コイン・${Math.round(c.seconds / 60)}分で育つ・もっている ${D().seeds[k] || 0}`,
         locked ? [] : [[`${c.seedPrice}`, buy(c.seedPrice, () => { D().seeds[k] = (D().seeds[k] || 0) + 1; toast(`${nm}を買った！ はたけでまけるよ`); }), D().coins >= c.seedPrice]], locked);
     }
     // ごはん・おやつ
     const food = sec("ごはん・おやつ");
-    row(food, ICONS.cookie, "クッキー（おやつ）", `15コイン・なかよしが たくさん上がる・もっている ${D().items.cookie || 0}`, [["15", buy(15, () => { D().items.cookie = (D().items.cookie || 0) + 1; toast("クッキーを買った！"); }), D().coins >= 15]]);
+    row(food, iconOf("cookie"), "クッキー（おやつ）", `15コイン・なかよしが たくさん上がる・もっている ${D().items.cookie || 0}`, [["15", buy(15, () => { D().items.cookie = (D().items.cookie || 0) + 1; toast("クッキーを買った！"); }), D().coins >= 15]]);
     for (const [k, p] of Object.entries(BUY_FOOD)) row(food, iconOf(k), ITEMS[k].name, `${p}コイン・もっている ${D().items[k] || 0}`, [[`${p}`, buy(p, () => { D().items[k] = (D().items[k] || 0) + 1; toast(`${ITEMS[k].name}を買った！`); }), D().coins >= p]]);
     // おもちゃ
     const toys = sec("おもちゃ（お部屋にかざると あそぶ時に うれしい）");
@@ -1260,7 +1326,7 @@ const Shop = {
     const wear = sec("きせかえ");
     for (const [k, w] of Object.entries(WEAR)) {
       const locked = w.level > lv, have = D().wear.includes(k);
-      row(wear, decorIcon(null, w.color), locked ? "？？？" : w.name, locked ? `おせわレベル ${w.level} で ならぶよ` : have ? "もっている（きせかえボタンで つけられるよ）" : `${w.price}コイン`,
+      row(wear, wearIcon(k), locked ? "？？？" : w.name, locked ? `おせわレベル ${w.level} で ならぶよ` : have ? "もっている（きせかえボタンで つけられるよ）" : `${w.price}コイン`,
         locked || have ? [] : [[`${w.price}`, buy(w.price, () => { D().wear.push(k); toast(`${w.name}を買った！`); }), D().coins >= w.price]], locked);
     }
   },
@@ -1271,7 +1337,8 @@ const Shop = {
     Save.store(); this.render(); Care.refresh(false); Farm.render(); Fishing.render();
   },
 };
-const decorIcon = (id, color) => dotSVG(color || DECOR[id].color);
+const decorIcon = (id, color) => id ? pic("decor_" + id, dotSVG(DECOR[id].color)) : dotSVG(color);
+const wearIcon = (k) => pic("wear_" + k, dotSVG(WEAR[k].color));
 
 /* ---------- 8d. Sheets（下から出る画面） ---------- */
 const Sheets = {
@@ -1302,7 +1369,7 @@ const Sheets = {
     const id = Care.id(), a = Care.cur();
     this.open(`${nameOf(id)}の きせかえ`, (p) => {
       if (!D().wear.length) { p.insertAdjacentHTML("beforeend", '<div class="empty">きせかえは おみせで買えます（おせわレベル2から）</div>'); return; }
-      this.grid(p, [{ icon: decorIcon(null, "#e4e0ee"), name: "なし", on: !a.wear, fn: () => set(null) }, ...D().wear.map((k) => ({ icon: decorIcon(null, WEAR[k].color), name: WEAR[k].name, on: a.wear === k, fn: () => set(k) }))]);
+      this.grid(p, [{ icon: decorIcon(null, "#e4e0ee"), name: "なし", on: !a.wear, fn: () => set(null) }, ...D().wear.map((k) => ({ icon: wearIcon(k), name: WEAR[k].name, on: a.wear === k, fn: () => set(k) }))]);
       const set = (k) => { a.wear = k; Room3D.setWear(k); Save.store(); this.close(); if (k) { Care.say("にあう？"); Room3D.jump(true); } };
     });
   },
@@ -1383,7 +1450,7 @@ const Zukan = {
       const a = D().animals[id], card = document.createElement("div");
       if (!a.owned) { card.className = "zcard lock"; card.innerHTML = `<div class="zface"></div><b>？？？</b><p>おせわレベル ${sp.level} になると、おみせで あえるよ</p>`; g.appendChild(card); continue; }
       card.className = "zcard";
-      card.innerHTML = `<div class="zface">${ZFACE[id] || ""}</div><b></b><p></p><div class="zstages"></div>`;
+      card.innerHTML = `<div class="zface">${pic("face_" + id, ZFACE[id] || "")}</div><b></b><p></p><div class="zstages"></div>`;
       card.querySelector("b").textContent = a.name ? `${a.name}（${sp.name}）` : sp.name;
       card.querySelector("p").textContent = sp.desc;
       CONFIG.stages.forEach((s, i) => { const t = document.createElement("span"); const got = a.seen.includes(i); t.textContent = got ? s.name : "？？？"; if (got) t.className = "got"; card.querySelector(".zstages").appendChild(t); });
@@ -1410,8 +1477,8 @@ function showTab(name) {
 Save.load();
 const away = applyTime();
 Save.store();
-document.querySelectorAll("[data-icon]").forEach((s) => (s.innerHTML = ICONS[s.dataset.icon]));
-document.querySelectorAll(".cicon").forEach((s) => (s.innerHTML = ICONS.coin));
+document.querySelectorAll("[data-icon]").forEach((s) => (s.innerHTML = iconOf(s.dataset.icon)));
+document.querySelectorAll(".cicon").forEach((s) => (s.innerHTML = iconOf("coin")));
 document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 Room3D.init($("stage"));
 Care.init();
