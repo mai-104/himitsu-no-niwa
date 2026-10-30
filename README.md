@@ -14,7 +14,7 @@
 
 ### 手順
 
-1. 画像（PNG）は `images` フォルダ、3Dモデル（GLB）は `models` フォルダに入れる
+1. 画像（PNG）は `images` フォルダ、3Dモデル（GLB）は `models` フォルダ、音（MP3）は `sounds` フォルダに入れる
    - GitHubの「Add file」→「Upload files」で、フォルダ名ごと入れられます（例：`images/carrot.png`）
 2. `index.html` を鉛筆マークで開いて、下の表の「書く場所」に1行足す
 3. 保存（Commit changes）して、数分後にゲームを開き直す
@@ -85,6 +85,37 @@ ribbon: { name: "リボン", price: 40, level: 2, color: "#f47b9b", png: "images
 | `wall` | お部屋のかべ（くり返し） |
 | `window` / `windowNight` | まどの外の景色（昼／夜） |
 | `fishScene` | つりの背景（ペンギンと桟橋もこの絵に描いておく。うき・つりざお・ゲージはゲームが描きます） |
+
+### ⑥ BGM・効果音 … `const SOUNDS = {` の中
+
+音（MP3）は `sounds` フォルダに入れて、`null` をファイル名に書きかえます。例：`main: "sounds/bgm_room.mp3",`
+
+**BGM（くり返し）**
+
+| 名前 | いつ流れるか |
+|---|---|
+| `main` | ふだん（おせわ画面。ほかの画面の曲が空の時もこれ） |
+| `night` | 夜（19時〜5時）のおせわ画面 |
+| `farm` `fish` `shop` `zukan` | それぞれの画面 |
+
+**効果音**
+
+| 名前 | いつ鳴るか |
+|---|---|
+| `button` | ボタン・タブを押した時 |
+| `eat` / `treat` | ごはん・おやつを食べた |
+| `pet` / `brush` | なでた・ブラシした（こするたび） |
+| `play` / `trick` | あそぶ・げい |
+| `sleep` / `wake` | ねかせる・おこす |
+| `walkOut` / `walkBack` | おさんぽに出かける・帰ってきた |
+| `grow` / `levelup` | 動物が成長した・おせわレベルが上がった |
+| `plant` / `water` / `harvest` | たねをまく・水やり・しゅうかく |
+| `cast` / `bite` / `catch` / `miss` | つり：なげる・かかった・つれた・にげられた |
+| `buy` / `sell` / `reward` / `adopt` | 買う・売る・おねがいのごほうび・なかまが来た |
+
+- 音を1つでも入れると、ずかん画面に「音：ON／OFF」の切りかえが出ます
+- スマホのきまりで、BGMは画面を最初にタップした時から流れます
+- 音量は `volume:` で変えられます（0〜1）
 
 ---
 

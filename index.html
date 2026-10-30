@@ -426,6 +426,85 @@ const ROOM_IMAGES = {
   fishScene: null,  // 例 "images/fish_scene.png"（つりの背景。ペンギンと桟橋もこの絵に描いておく）
 };
 
+/* ===== BGM・効果音のファイル =====
+   ファイル名を書くと鳴ります（null のままなら鳴りません）。いつ鳴るかは README.md に一覧があります。
+   例： main: "sounds/bgm_room.mp3",  eat: "sounds/se_eat.mp3", */
+const SOUNDS = {
+  bgm: {
+    main: null,    // ふだん（おせわ画面。ほかの画面の曲が null の時もこれ）
+    night: null,   // 夜（19時〜5時）のおせわ画面
+    farm: null, fish: null, shop: null, zukan: null,
+  },
+  se: {
+    button: null,                      // ボタンやタブを押した時
+    eat: null, treat: null,            // ごはん・おやつを食べた
+    pet: null, brush: null,            // なでた・ブラシした（こするたび）
+    play: null, trick: null,           // あそぶ・げい
+    sleep: null, wake: null,           // ねかせる・おこす
+    walkOut: null, walkBack: null,     // おさんぽに出かける・帰ってきた
+    grow: null, levelup: null,         // 動物が成長した・おせわレベルが上がった
+    plant: null, water: null, harvest: null,   // たねをまく・水やり・しゅうかく
+    cast: null, bite: null, catch: null, miss: null,   // つり：なげる・かかった・つれた・にげられた
+    buy: null, sell: null, reward: null, adopt: null,   // 買う・売る・おねがいのごほうび・なかまが来た
+  },
+  volume: { bgm: 0.5, se: 0.8 },
+};
+/* ===== BGM・効果音 =====
+   SOUNDS にファイル名を書くと鳴ります（null のままなら鳴りません）。
+   音は同じリポジトリの sounds フォルダに入れて "sounds/ファイル名.mp3" のように書きます（mp3 がおすすめ）。
+   どの名前でいつ鳴るかは README.md にあります。
+   ・BGMは、画面を最初にタップした時から流れます（スマホのきまりで、タップ前は鳴らせないため）
+   ・音のON/OFFボタンは、音を1つでも入れると表示されます */
+const Sound = {
+  key: "niwa-sound",
+  on: true, cache: {}, cur: null, curName: null, want: null, unlocked: false,
+  init() {
+    try { this.on = localStorage.getItem(this.key) !== "off"; } catch (_) {}
+    const unlock = () => { this.unlocked = true; if (this.want) this.bgm(this.want, true); };
+    addEventListener("pointerdown", unlock, { capture: true });
+    document.addEventListener("visibilitychange", () => {
+      if (!this.cur) return;
+      if (document.visibilityState === "hidden") this.cur.pause(); else if (this.on) this.cur.play().catch(() => {});
+    });
+  },
+  any() { return Object.values(SOUNDS.bgm).some(Boolean) || Object.values(SOUNDS.se).some(Boolean); },
+  se(name) {
+    const src = SOUNDS.se[name];
+    if (!src || !this.on) return;
+    try {
+      if (!this.cache[src]) { this.cache[src] = new Audio(src); this.cache[src].preload = "auto"; }
+      const a = this.cache[src].cloneNode();
+      a.volume = SOUNDS.volume.se; a.play().catch(() => {});
+    } catch (_) {}
+  },
+  /** BGMを切り替える（同じ曲なら何もしない）。null で止める */
+  bgm(name, force) {
+    this.want = name;
+    const src = name ? SOUNDS.bgm[name] : null;
+    if (!force && this.curName === name && this.cur && !this.cur.paused) return;
+    if (this.cur) { this.cur.pause(); this.cur = null; this.curName = null; }
+    if (!src || !this.on || !this.unlocked) return;
+    try {
+      const a = new Audio(src); a.loop = true; a.volume = SOUNDS.volume.bgm;
+      a.play().catch(() => {});
+      this.cur = a; this.curName = name;
+    } catch (_) {}
+  },
+  toggle() {
+    this.on = !this.on;
+    try { localStorage.setItem(this.key, this.on ? "on" : "off"); } catch (_) {}
+    if (this.on) this.bgm(this.want, true); else if (this.cur) { this.cur.pause(); this.cur = null; this.curName = null; }
+    return this.on;
+  },
+};
+
+/** 画面に合わせてBGMを選ぶ（その画面の曲がなければ main） */
+function bgmFor(tab) {
+  const h = new Date().getHours(), night = h >= 19 || h < 5;
+  const name = tab === "care" ? (night && SOUNDS.bgm.night ? "night" : "main") : (SOUNDS.bgm[tab] ? tab : "main");
+  Sound.bgm(name);
+}
+
 /* ---------- 4. Save ---------- */
 const SAVE_KEY = "doubutsu-save-v1";
 const newAnimal = () => ({ owned: false, name: "", hunger: 70, bond: 10, energy: 80, clean: 80, care: 0, seen: [0], sleeping: false, walk: null, wear: null, xpHour: 0, petXp: 0, brushXp: 0, ticks: 0 });
@@ -504,7 +583,7 @@ function addXp(n) {
   const after = levelOf(D().xp);
   if (after > before) {
     setTimeout(() => {
-      toast(`おせわレベルが ${after} になった！ おみせに新しいものが並んだよ`, 3200);
+      Sound.se("levelup"); toast(`おせわレベルが ${after} になった！ おみせに新しいものが並んだよ`, 3200);
       Room3D.celebrate(`おせわレベル\n${after}！`);
     }, 600);
   }
@@ -973,7 +1052,7 @@ const Care = {
     const after = stageOf(a);
     if (after > before) {
       if (!a.seen.includes(after)) a.seen.push(after);
-      Room3D.setStage(after, true);
+      Room3D.setStage(after, true); Sound.se("grow");
       Room3D.celebrate(`${CONFIG.stages[after].name}に\nなったよ！`);
       this.say(`${nameOf(this.id())}が ${CONFIG.stages[after].name}に 成長した！${after === CONFIG.stages.length - 1 ? " これからも なかよくしてね" : ""}`, 3200);
     }
@@ -995,7 +1074,7 @@ const Care = {
     requestAnimationFrame(() => { f.style.transform = `translate(${st.left + hs.x - (btn.left + btn.width / 2)}px, ${st.top + hs.y + 20 - btn.top}px) scale(.7)`; f.style.opacity = "0"; });
     setTimeout(() => f.remove(), 800);
     setTimeout(() => {
-      Room3D.eat();
+      Room3D.eat(); Sound.se(isTreat ? "treat" : "eat");
       const c = isTreat ? CONFIG.treat : CONFIG.feed;
       a.hunger = clamp(a.hunger + c.hunger); a.bond = clamp(a.bond + c.bond); if (c.energy) a.energy = clamp(a.energy + c.energy);
       this.hearts(isTreat ? 5 : 3);
@@ -1009,7 +1088,7 @@ const Care = {
     const a = this.cur(), c = CONFIG.play;
     if (a.energy < c.needEnergy) { this.say("つかれてるみたい。ねかせてあげてね", 2600); return; }
     const toy = Object.values(D().room).some((id) => DECOR[id]?.toy);
-    Room3D.faceFront(); Room3D.jump(true);
+    Room3D.faceFront(); Room3D.jump(true); Sound.se("play");
     a.hunger = clamp(a.hunger + c.hunger); a.bond = clamp(a.bond + c.bond + (toy ? c.toyBonus : 0)); a.energy = clamp(a.energy + c.energy); a.clean = clamp(a.clean + c.clean);
     setTimeout(() => this.hearts(toy ? 4 : 2), 500);
     this.say(toy ? "おもちゃで あそぶの たのしい！" : ["わーい！", "くるっ！", "たのしい！"][Math.floor(Math.random() * 3)]);
@@ -1020,7 +1099,7 @@ const Care = {
     if (this.blocked()) return;
     const a = this.cur(), c = CONFIG.trick;
     if (a.energy < c.needEnergy) { this.say("つかれてるみたい"); return; }
-    const kind = Room3D.trick();
+    const kind = Room3D.trick(); Sound.se("trick");
     this.say({ wave: "はーい！", wash: "おかおを あらうよ", spin: "くるくる〜", bow: "ぺこり" }[kind]);
     a.bond = clamp(a.bond + c.bond); a.energy = clamp(a.energy + c.energy);
     setTimeout(() => this.hearts(2), 1200);
@@ -1029,7 +1108,7 @@ const Care = {
   sleep() {
     if (this.blocked(true)) return;
     const a = this.cur();
-    a.sleeping = !a.sleeping;
+    a.sleeping = !a.sleeping; Sound.se(a.sleeping ? "sleep" : "wake");
     this.say(a.sleeping ? "おやすみなさい…" : "おはよう！");
     if (!a.sleeping) Room3D.jump(false);
     Save.store(); this.refresh(false);
@@ -1041,7 +1120,7 @@ const Care = {
     a.walk = { until: Date.now() + CONFIG.walkMinutes * 60000 };
     a.energy = clamp(a.energy + c.energy); a.hunger = clamp(a.hunger + c.hunger);
     Save.store();
-    this.say("いってきまーす！");
+    this.say("いってきまーす！"); Sound.se("walkOut");
     Room3D.walkOut(() => { if (this.id() === id) this.refresh(false); });
     Quest.bump("walk");
   },
@@ -1072,7 +1151,7 @@ const Care = {
       this.addCare(c.xp);
       D().current = prev;
       Save.store();
-      toast(`${nameOf(id)}が帰ってきた！ ${msg}`, 3600);
+      toast(`${nameOf(id)}が帰ってきた！ ${msg}`, 3600); Sound.se("walkBack");
       if (id === this.id()) { this.refresh(false); Room3D.walkBack(); setTimeout(() => this.say(msg, 3600), 1700); }
     }
   },
@@ -1116,7 +1195,7 @@ const Care = {
       if (!brush && a.petXp < CONFIG.pet.xpPerHour) { a.petXp++; this.addCare(1); }
     }
     const r = $("stage").getBoundingClientRect();
-    this.fxAt(x - r.left, y - r.top, brush ? "bubble" : "heartPink", brush ? "spark" : "heart");
+    this.fxAt(x - r.left, y - r.top, brush ? "bubble" : "heartPink", brush ? "spark" : "heart"); Sound.se(brush ? "brush" : "pet");
     if (Math.random() < .12) this.say(brush ? ["ぴかぴか！", "さっぱり〜", "いいきもち"][Math.floor(Math.random() * 3)] : ["きもちいい〜", "もっと！", "えへへ"][Math.floor(Math.random() * 3)]);
     Save.store(); this.refresh(false);
   },
@@ -1172,13 +1251,14 @@ const Farm = {
       const got = Math.round(rand(c.yield[0], c.yield[1]));
       D().items[c.item] = (D().items[c.item] || 0) + got;
       D().plots[i] = { state: "empty" };
-      toast(`${ITEMS[c.item].name}を ${got}こ しゅうかく！`); Quest.bump("harvest");
-    } else if (isWater && !p.watered) { p.readyAt = now + (p.readyAt - now) * CONFIG.waterCut; p.watered = true; toast("水をあげた！ 早く育つよ"); }
+      toast(`${ITEMS[c.item].name}を ${got}こ しゅうかく！`); Quest.bump("harvest"); Sound.se("harvest");
+    } else if (isWater && !p.watered) { p.readyAt = now + (p.readyAt - now) * CONFIG.waterCut; p.watered = true; toast("水をあげた！ 早く育つよ"); Sound.se("water"); }
     Save.store(); this.render(); Care.refresh(false);
   },
   plant(i, crop) {
     const c = CROPS[crop];
     if (c.seedPrice) { if (!D().seeds[crop]) return; D().seeds[crop]--; }
+    Sound.se("plant");
     D().plots[i] = { state: "grow", crop, readyAt: Date.now() + c.seconds * 1000, total: c.seconds, watered: false };
     Save.store(); this.render();
   },
@@ -1204,7 +1284,7 @@ const Fishing = {
   setBtn(text, on = true) { const b = $("fishBtn"); b.textContent = text; b.disabled = !on; b.style.opacity = on ? 1 : .6; },
   button() {
     if (this.state === "idle" || this.state === "result") {
-      this.state = "wait"; this.t = 0; this.waitFor = rand(...CONFIG.biteWait); this.msg = ""; this.setBtn("…まってね", false);
+      this.state = "wait"; this.t = 0; this.waitFor = rand(...CONFIG.biteWait); this.msg = ""; this.setBtn("…まってね", false); Sound.se("cast");
     } else if (this.state === "bite") {
       this.kind = pickWeighted(FISHES, "weight");
       const f = FISHES[this.kind], easy = D().easy;
@@ -1215,8 +1295,8 @@ const Fishing = {
       if (this.cursor >= this.zone && this.cursor <= this.zone + this.zoneW) {
         D().items[this.kind] = (D().items[this.kind] || 0) + 1;
         this.msg = this.kind === "tai" ? "大物！ たいが つれた！" : `${ITEMS[this.kind].name}が つれた！`; this.caught = 1;
-        Quest.bump("fish"); Save.store(); this.render(); Care.refresh(false);
-      } else { this.msg = "にげられちゃった…"; this.caught = 0; }
+        Quest.bump("fish"); Sound.se("catch"); Save.store(); this.render(); Care.refresh(false);
+      } else { this.msg = "にげられちゃった…"; this.caught = 0; Sound.se("miss"); }
       this.state = "result"; this.t = 0; this.setBtn("もういちど なげる");
     }
   },
@@ -1225,8 +1305,8 @@ const Fishing = {
     if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
     const c = this.ctx, W = cv.width, H = cv.height, u = W / 100, font = getComputedStyle(document.body).fontFamily;
     this.t += dt;
-    if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); try { navigator.vibrate && navigator.vibrate(80); } catch (_) {} }
-    if (this.state === "bite" && this.t > CONFIG.biteWindow * (D().easy ? 1.6 : 1)) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; this.setBtn("もういちど なげる"); }
+    if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); Sound.se("bite"); try { navigator.vibrate && navigator.vibrate(80); } catch (_) {} }
+    if (this.state === "bite" && this.t > CONFIG.biteWindow * (D().easy ? 1.6 : 1)) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; Sound.se("miss"); this.setBtn("もういちど なげる"); }
     if (ROOM_IMAGES.fishScene && !this.bg) { this.bg = new Image(); this.bg.src = ROOM_IMAGES.fishScene; }
     const useBg = this.bg && this.bg.complete && this.bg.naturalWidth;
     if (useBg) { const ir = this.bg.naturalWidth / this.bg.naturalHeight, cr = W / H; let sw = this.bg.naturalWidth, sh = this.bg.naturalHeight, sx = 0, sy = 0; if (ir > cr) { sw = sh * cr; sx = (this.bg.naturalWidth - sw) / 2; } else { sh = sw / cr; sy = (this.bg.naturalHeight - sh) / 2; } c.drawImage(this.bg, sx, sy, sw, sh, 0, 0, W, H); }
@@ -1291,7 +1371,7 @@ const Shop = {
       const n = D().items[k], p = ITEMS[k].price;
       row(sell, iconOf(k), ITEMS[k].name, `${n}こ もっている・1こ ${p}コイン`, [["1こ", () => this.sell(k, 1), true, "sub2"], ["ぜんぶ", () => this.sell(k, n), true]]);
     }
-    const buy = (cost, fn) => () => { if (D().coins < cost) { toast("コインが たりないよ"); return; } D().coins -= cost; fn(); Quest.bump("shop"); Save.store(); this.render(); Care.refresh(false); Farm.render(); };
+    const buy = (cost, fn) => () => { if (D().coins < cost) { toast("コインが たりないよ"); return; } D().coins -= cost; fn(); Quest.bump("shop"); Sound.se("buy"); Save.store(); this.render(); Care.refresh(false); Farm.render(); };
     // なかま（動物）
     const pals = sec("なかまを おむかえ");
     for (const [id, sp] of Object.entries(SPECIES)) {
@@ -1299,7 +1379,7 @@ const Shop = {
       if (a.owned) continue;
       const locked = sp.level > lv;
       row(pals, pic("face_" + id, ZFACE[id] || ""), locked ? "？？？" : sp.name, locked ? `おせわレベル ${sp.level} で あえるよ` : `${sp.price}コイン・${sp.desc}`,
-        locked ? [] : [[`${sp.price}`, buy(sp.price, () => { a.owned = true; D().current = id; Care.refresh(true); toast(`${sp.name}が おうちに来た！ なまえをつけてあげよう`, 3000); setTimeout(() => { showTab("care"); Sheets.name(); }, 300); }), D().coins >= sp.price]], locked);
+        locked ? [] : [[`${sp.price}`, buy(sp.price, () => { a.owned = true; D().current = id; Sound.se("adopt"); Care.refresh(true); toast(`${sp.name}が おうちに来た！ なまえをつけてあげよう`, 3000); setTimeout(() => { showTab("care"); Sheets.name(); }, 300); }), D().coins >= sp.price]], locked);
     }
     if (!pals.querySelector(".row")) pals.insertAdjacentHTML("beforeend", '<div class="empty">いまは みんな おうちにいるよ</div>');
     // たね
@@ -1333,7 +1413,7 @@ const Shop = {
   sell(k, n) {
     const got = ITEMS[k].price * n;
     D().items[k] -= n; D().coins += got;
-    toast(`${ITEMS[k].name}を ${n}こ 売って ${got}コイン！`); Quest.bump("sell");
+    toast(`${ITEMS[k].name}を ${n}こ 売って ${got}コイン！`); Sound.se("sell"); Quest.bump("sell");
     Save.store(); this.render(); Care.refresh(false); Farm.render(); Fishing.render();
   },
 };
@@ -1432,7 +1512,7 @@ const Quest = {
   render() {
     const q = this.ensure(), d = this.def(), el = $("quest");
     el.innerHTML = `<span class="qt">${q.done ? "きょうの おねがい クリア！" : d.text} <small>${q.done ? "またあした" : `${q.p}/${d.n}`}</small></span>`;
-    if (!q.done && q.p >= d.n) { const b = document.createElement("button"); b.type = "button"; b.textContent = `+${d.reward}`; b.onclick = () => { q.done = true; D().coins += d.reward; addXp(3); toast(`ごほうび ${d.reward}コイン！`); Save.store(); Care.refresh(false); }; el.appendChild(b); }
+    if (!q.done && q.p >= d.n) { const b = document.createElement("button"); b.type = "button"; b.textContent = `+${d.reward}`; b.onclick = () => { q.done = true; D().coins += d.reward; Sound.se("reward"); addXp(3); toast(`ごほうび ${d.reward}コイン！`); Save.store(); Care.refresh(false); }; el.appendChild(b); }
   },
 };
 
@@ -1467,6 +1547,7 @@ function showTab(name) {
   document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
   ["care", "farm", "fish", "shop", "zukan"].forEach((n) => ($(n).hidden = n !== name));
   Room3D.running = name === "care";
+  bgmFor(name);
   if (name === "care") { Room3D.resize(); Care.refresh(false); }
   if (name === "farm") Farm.render();
   if (name === "fish") Fishing.render();
@@ -1480,6 +1561,15 @@ Save.store();
 document.querySelectorAll("[data-icon]").forEach((s) => (s.innerHTML = iconOf(s.dataset.icon)));
 document.querySelectorAll(".cicon").forEach((s) => (s.innerHTML = iconOf("coin")));
 document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+Sound.init();
+bgmFor("care");
+document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest(".act, .tab, .arrow, .who")) Sound.se("button"); });
+if (Sound.any()) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "reset"; b.id = "soundToggle";
+  const label = () => (b.textContent = `音：${Sound.on ? "ON" : "OFF"}（ここで切りかえ）`); label();
+  b.onclick = () => { Sound.toggle(); label(); };
+  $("resetBtn").before(b);
+}
 Room3D.init($("stage"));
 Care.init();
 Farm.init();
