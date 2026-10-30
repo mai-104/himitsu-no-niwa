@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#cfe9f3">
+<title>どうぶつのともだち（仮）</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* レイアウト：上に動物の名前と数値、真ん中に3Dの動物、下にボタンとタブ。
+   見た目は「晴れた日の野原」1種類に固定（ゲームなのでライト/ダーク切替なし）
+   TODO: 色を変えたいときは、この :root の中だけ書き換えれば全体に反映されます */
+:root {
+  --sky: #cfe9f3;        /* 空 */
+  --sky2: #eef8fb;       /* 空（地平線近く） */
+  --card: #ffffff;       /* カード・ボタンの地 */
+  --ink: #3b3552;        /* 文字 */
+  --soft: #7d7796;       /* 弱い文字 */
+  --line: #e4e0ee;       /* 線 */
+  --coral: #f2876b;      /* 強調（ボタン・選択中） */
+  --leaf: #6fbf73;       /* 畑・成功 */
+  --sea: #4aa3d8;        /* 海 */
+  --gold: #f6c453;       /* なかよし */
+  --font: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--font); color: var(--ink); background: var(--sky);
+  overflow: hidden; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--coral); outline-offset: 2px; }
+[hidden] { display: none !important; }
+
+#app {
+  height: 100%; display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* ---------- おせわタブ ---------- */
+.care-top {
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 6px max(16px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 8px;
+}
+.switcher { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.switcher .arrow {
+  width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.7);
+  font-size: 20px; font-weight: 900; color: var(--soft);
+}
+.switcher .arrow:disabled { opacity: .3; }
+.who { text-align: center; line-height: 1.2; }
+.who b { font-size: 22px; font-weight: 900; letter-spacing: .04em; }
+.who small { display: block; font-size: 12px; color: var(--soft); font-weight: 700; margin-top: 2px; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { background: rgba(255,255,255,.75); border-radius: 12px; padding: 6px 8px; }
+.stat span { font-size: 11px; font-weight: 700; color: var(--soft); display: flex; justify-content: space-between; }
+.stat span em { font-style: normal; font-variant-numeric: tabular-nums; color: var(--ink); }
+.meter { height: 7px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.meter i { display: block; height: 100%; border-radius: 4px; transition: width .4s; }
+.meter.hun i { background: var(--coral); }
+.meter.bond i { background: var(--gold); }
+.meter.eng i { background: var(--leaf); }
+
+.stage {
+  position: relative; flex: 1; min-height: 0; overflow: hidden; touch-action: none;
+  background: linear-gradient(180deg, var(--sky) 0%, var(--sky2) 70%);
+}
+.stage canvas { display: block; width: 100%; height: 100%; }
+.bubble {
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+  max-width: calc(100% - 32px); background: var(--card); border-radius: 16px; padding: 8px 14px;
+  font-size: 14px; font-weight: 700; text-align: center; line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(59,53,82,.12); pointer-events: none;
+  transition: opacity .3s; text-wrap: balance;
+}
+.bubble.off { opacity: 0; }
+.fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.heart { position: absolute; width: 26px; height: 26px; animation: floatUp 1s ease-out forwards; }
+@keyframes floatUp { from { transform: translate(-50%, -50%) scale(.6); opacity: 1; } to { transform: translate(-50%, -150%) scale(1.1); opacity: 0; } }
+.flyfood { position: absolute; width: 44px; height: 44px; pointer-events: none; z-index: 20; transition: transform .55s cubic-bezier(.3,.7,.4,1), opacity .2s .5s; }
+.levelup {
+  position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
+  font-size: 30px; font-weight: 900; color: var(--coral); text-align: center;
+  -webkit-text-stroke: 5px #fff; paint-order: stroke fill; animation: pop .5s cubic-bezier(.2,1.6,.4,1) both;
+}
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.actions {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--sky2);
+}
+.act {
+  position: relative; border: 0; border-radius: 18px; background: var(--card); padding: 10px 4px 8px;
+  display: grid; justify-items: center; gap: 2px; font-weight: 900; font-size: 15px;
+  box-shadow: 0 3px 0 var(--line); transition: transform .1s;
+}
+.act:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.act svg { width: 34px; height: 34px; }
+.act .badge {
+  position: absolute; top: 6px; right: 8px; min-width: 22px; padding: 1px 6px; border-radius: 11px;
+  background: var(--coral); color: #fff; font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.act .badge.zero { background: var(--line); color: var(--soft); }
+
+/* ---------- 共通：サブ画面（畑・釣り・図鑑） ---------- */
+.sub {
+  flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px));
+  display: flex; flex-direction: column; gap: 12px;
+}
+.sub h2 { margin: 0; font-size: 22px; font-weight: 900; }
+.sub .lead { margin: -6px 0 0; font-size: 13px; color: var(--soft); line-height: 1.6; }
+.stock {
+  display: flex; align-items: center; gap: 8px; background: var(--card); border-radius: 14px; padding: 8px 12px;
+  font-weight: 700; font-size: 14px;
+}
+.stock svg { width: 28px; height: 28px; flex: none; }
+.stock b { font-size: 20px; font-variant-numeric: tabular-nums; margin-left: auto; }
+
+/* 畑 */
+#farm { background: linear-gradient(180deg, var(--sky) 0%, #e3f1d2 40%); }
+.plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.plot {
+  border: 0; border-radius: 16px; background: #a9764e; aspect-ratio: 1 / 1.15; max-width: 100%;
+  display: grid; grid-template-rows: 1fr auto; justify-items: center; padding: 8px 4px 6px;
+  box-shadow: inset 0 -6px 0 #8c5f3c; color: #fff; min-width: 0;
+}
+.plot svg { width: 72%; height: auto; align-self: end; }
+.plot small { font-size: 12px; font-weight: 700; line-height: 1.3; font-variant-numeric: tabular-nums; }
+.plot.ready { background: #b98557; box-shadow: inset 0 -6px 0 #8c5f3c, 0 0 0 3px var(--gold); }
+.water {
+  border: 0; border-radius: 999px; background: var(--sea); color: #fff; font-weight: 900; font-size: 12px;
+  padding: 2px 10px; margin-top: 2px;
+}
+.note { font-size: 12px; color: var(--soft); line-height: 1.6; margin: 0; }
+
+/* 釣り */
+#fish { background: linear-gradient(180deg, var(--sky) 0%, #d5ecf7 40%); }
+.fishwrap { position: relative; border-radius: 18px; overflow: hidden; background: #8fd0ef; aspect-ratio: 4 / 5; max-height: 52vh; width: 100%; touch-action: manipulation; }
+.fishwrap canvas { display: block; width: 100%; height: 100%; }
+.bigbtn {
+  border: 0; border-radius: 18px; background: var(--coral); color: #fff; font-weight: 900; font-size: 20px;
+  padding: 14px; box-shadow: 0 4px 0 #c96a52; letter-spacing: .06em;
+}
+.bigbtn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c96a52; }
+
+/* 図鑑 */
+.zgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.zcard { background: var(--card); border-radius: 16px; padding: 12px; display: grid; gap: 6px; min-width: 0; }
+.zcard b { font-size: 17px; font-weight: 900; }
+.zcard p { margin: 0; font-size: 12px; color: var(--soft); line-height: 1.6; }
+.zstages { display: flex; gap: 4px; flex-wrap: wrap; }
+.zstages span { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--soft); }
+.zstages span.got { background: #fde3db; color: #b8513a; }
+.zcard.lock { background: rgba(255,255,255,.5); border: 2px dashed var(--line); }
+.zcard.lock b { color: var(--soft); }
+.zface { height: 64px; display: grid; place-items: center; }
+.zface svg { height: 60px; width: auto; }
+.reset { align-self: center; border: 0; background: transparent; color: var(--soft); font-size: 12px; text-decoration: underline; padding: 8px; }
+.confirm { background: var(--card); border-radius: 14px; padding: 12px; display: grid; gap: 8px; text-align: center; font-size: 13px; font-weight: 700; }
+.confirm div { display: flex; gap: 8px; justify-content: center; }
+.confirm button { border: 0; border-radius: 999px; padding: 6px 16px; font-weight: 700; background: var(--line); }
+.confirm button.danger { background: var(--coral); color: #fff; }
+
+/* ---------- 下のタブ ---------- */
+.tabs {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: var(--card);
+  border-top: 1px solid var(--line);
+  padding: 4px max(8px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+}
+.tab { border: 0; background: transparent; display: grid; justify-items: center; gap: 1px; padding: 6px 0; font-size: 12px; font-weight: 700; color: var(--soft); border-radius: 12px; }
+.tab svg { width: 26px; height: 26px; }
+.tab[aria-selected="true"] { color: var(--coral); background: #fdeee9; }
+
+@media (prefers-reduced-motion: reduce) { .heart, .levelup { animation-duration: .01s; } }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== おせわ ===== -->
+  <section class="panel" id="care" role="tabpanel">
+    <div class="care-top">
+      <div class="switcher">
+        <button class="arrow" id="prevA" type="button" aria-label="前の動物">‹</button>
+        <div class="who"><b id="aName">うさぎ</b><small id="aStage">あかちゃん</small></div>
+        <button class="arrow" id="nextA" type="button" aria-label="次の動物">›</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>おなか<em id="vHun">0</em></span><div class="meter hun"><i id="mHun"></i></div></div>
+        <div class="stat"><span>なかよし<em id="vBond">0</em></span><div class="meter bond"><i id="mBond"></i></div></div>
+        <div class="stat"><span>げんき<em id="vEng">0</em></span><div class="meter eng"><i id="mEng"></i></div></div>
+      </div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="bubble off" id="bubble"></div>
+      <div class="fx" id="fx"></div>
+    </div>
+    <div class="actions">
+      <button class="act" id="btnFeed" type="button"><span class="badge" id="foodBadge">0</span><span id="feedIcon"></span><span>ごはん</span></button>
+      <button class="act" id="btnPet" type="button"><span id="petIcon"></span><span>なでる</span></button>
+      <button class="act" id="btnPlay" type="button"><span id="playIcon"></span><span>あそぶ</span></button>
+    </div>
+  </section>
+
+  <!-- ===== 畑 ===== -->
+  <section class="panel" id="farm" role="tabpanel" hidden>
+    <div class="sub">
+      <h2>はたけ</h2>
+      <p class="lead">たねをまいて、にんじんを育てよう。水をあげると早く育つよ。</p>
+      <div class="stock"><span id="carrotIcon"></span>にんじん<b id="carrotCount">0</b></div>
+      <div class="plots" id="plots"></div>
+      <p class="note">アプリを閉じていても、時間がたてば育ちます。</p>
+    </div>
+  </section>
+
+  <!-- ===== 釣り ===== -->
+  <section class="panel" id="fish" role="tabpanel" hidden>
+    <div class="sub">
+      <h2>つり</h2>
+      <p class="lead">うきが沈んだら、すばやくタップ！ そのあと、ゲージが黄色に入ったところでもう一度タップ。</p>
+      <div class="stock"><span id="fishIcon"></span>さかな<b id="fishCount">0</b></div>
+      <div class="fishwrap" id="fishWrap"><canvas id="fishCanvas"></canvas></div>
+      <button class="bigbtn" id="fishBtn" type="button">つりざおを なげる</button>
+    </div>
+  </section>
+
+  <!-- ===== 図鑑 ===== -->
+  <section class="panel" id="zukan" role="tabpanel" hidden>
+    <div class="sub">
+      <h2>ずかん</h2>
+      <p class="lead">育てた動物と、見られた成長のすがたが記録されます。</p>
+      <div class="zgrid" id="zgrid"></div>
+      <button class="reset" id="resetBtn" type="button">データをはじめからにする</button>
+      <div class="confirm" id="resetConfirm" hidden>
+        <span>ほんとうに、はじめからにしますか？</span>
+        <div><button type="button" id="resetNo">やめる</button><button type="button" class="danger" id="resetYes">はじめから</button></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-tab="care" aria-selected="true" type="button"><span data-icon="heart"></span>おせわ</button>
+    <button class="tab" role="tab" data-tab="farm" aria-selected="false" type="button"><span data-icon="sprout"></span>はたけ</button>
+    <button class="tab" role="tab" data-tab="fish" aria-selected="false" type="button"><span data-icon="rod"></span>つり</button>
+    <button class="tab" role="tab" data-tab="zukan" aria-selected="false" type="button"><span data-icon="book"></span>ずかん</button>
+  </nav>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   どうぶつのともだち（仮）
+   ---------------------------------------------------------------------
+   【構成】
+     1. CONFIG    … 数値の減り方・成長の目安など（ゲームバランスはここで調整）
+     2. ICONS     … 画面で使う小さな絵（SVG）
+     3. SPECIES   … 動物の種類。ここに1つ足せば動物が増える
+                    glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示
+     4. Save      … データの保存（スマホのブラウザに保存）
+     5. Stage3D   … 3D表示と動き
+     6. Care      … おせわ画面
+     7. Farm      … はたけ
+     8. Fishing   … つり
+     9. Zukan     … ずかん
+    10. 起動
+   ===================================================================== */
+
+/* ---------- 1. CONFIG ---------- */
+const CONFIG = {
+  // 1時間あたりの変化（閉じていた間もこの割合で計算）
+  hungerPerHour: -10,     // おなかの減り方
+  energyPerHour: +12,     // げんきの回復（休んでいると戻る）
+  bondPerHourWhenHungry: -3, // おなかが30より少ない間だけ、なかよしが減る
+  maxAwayHours: 72,       // これ以上の時間は数えない（長く放っておいても極端にならない）
+
+  feed: { hunger: +30, bond: +3, energy: +5, care: 3 },
+  play: { hunger: -6, bond: +8, energy: -18, care: 3, needEnergy: 18 },
+  pet:  { bond: +2, care: 1, every: 0.5, maxCarePerHour: 6 }, // なでて0.5秒ごとに+2
+
+  // 成長：おせわポイントがこの数に届くと次の段階へ
+  stages: [
+    { name: "あかちゃん", care: 0,   scale: .72, head: 1.22 },
+    { name: "こども",     care: 25,  scale: .86, head: 1.1 },
+    { name: "おとな",     care: 80,  scale: 1.0, head: 1.0 },
+  ],
+
+  // はたけ
+  plots: 6,
+  growSeconds: 120,       // にんじんが育つまでの秒数
+  waterCut: 0.5,          // 水やりで残り時間がこの割合になる（1回だけ）
+
+  // つり
+  biteWait: [1.5, 4.0],   // うきが沈むまでの秒数（この間でランダム）
+  biteWindow: 1.0,        // 沈んでからタップできる秒数
+};
+
+/* ---------- 2. ICONS（小さな絵） ---------- */
+const ICONS = {
+  carrot: '<svg viewBox="0 0 48 48"><path d="M24 14c6 0 9 4 8 9l-6 20c-.6 2-3.4 2-4 0L16 23c-1-5 2-9 8-9z" fill="#f28a2e"/><path d="M19 22h6M21 29h5M22 35h3" stroke="#d26b18" stroke-width="2" stroke-linecap="round"/><path d="M24 15c-1-5-5-9-9-9 2 3 4 6 9 9zm0 0c0-5 1-10 4-12-.5 4 0 8-4 12zm0 0c3-4 7-6 11-5-3 2-6 4-11 5z" fill="#5fae5c"/></svg>',
+  fish: '<svg viewBox="0 0 48 48"><path d="M6 24c6-9 18-12 28-6l8-6v24l-8-6C24 36 12 33 6 24z" fill="#5aa9e0"/><path d="M22 18c3 3 3 9 0 12" stroke="#3d86bf" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="13" cy="22" r="2.2" fill="#24324a"/></svg>',
+  pet: '<svg viewBox="0 0 48 48"><path d="M14 30V16a3 3 0 016 0v10V12a3 3 0 016 0v14V14a3 3 0 016 0v14-8a3 3 0 016 0v12c0 8-6 13-13 13h-1c-5 0-8-2-11-6l-6-8a3 3 0 015-3z" fill="#ffd9c4" stroke="#d99a7d" stroke-width="2" stroke-linejoin="round"/></svg>',
+  ball: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17" fill="#f6c453"/><path d="M8 20c10 4 22 4 32 0M10 31c9-3 19-3 28 0" stroke="#f2876b" stroke-width="3" fill="none"/></svg>',
+  heart: '<svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 18a9 9 0 0117-4 9 9 0 0117 4c0 12-17 22-17 22z" fill="currentColor"/></svg>',
+  heartPink: '<svg viewBox="0 0 48 48"><path d="M24 40S7 30 7 18a9 9 0 0117-4 9 9 0 0117 4c0 12-17 22-17 22z" fill="#f47b9b"/></svg>',
+  sprout: '<svg viewBox="0 0 48 48"><path d="M24 40V24" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M24 26c-2-8-8-11-15-10 1 7 7 11 15 10zm0-4c1-8 7-12 15-12-1 8-7 12-15 12z" fill="currentColor"/></svg>',
+  rod: '<svg viewBox="0 0 48 48"><path d="M8 42L36 8" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M36 8c4 8 5 16 4 24" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="40" cy="34" r="4" fill="currentColor"/></svg>',
+  book: '<svg viewBox="0 0 48 48"><path d="M8 10c6-2 11-1 16 3v27c-5-4-10-5-16-3zm32 0c-6-2-11-1-16 3v27c5-4 10-5 16-3z" fill="currentColor"/></svg>',
+  // 畑の育ち具合
+  plot0: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="32" rx="16" ry="5" fill="#8c5f3c"/></svg>',
+  plot1: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="34" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34v-8" stroke="#5fae5c" stroke-width="3" stroke-linecap="round"/><path d="M24 28c-3-4-7-5-10-4 2 4 6 5 10 4zm0-1c2-4 6-6 10-5-2 4-6 6-10 5z" fill="#6fbf73"/></svg>',
+  plot2: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="35" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 34c-1-10-6-16-12-18 1 7 6 14 12 18zm0 0c0-10 3-19 8-22 1 8-2 16-8 22zm0 0c3-8 9-12 15-11-2 6-8 10-15 11z" fill="#5fae5c"/></svg>',
+  plot3: '<svg viewBox="0 0 48 40"><ellipse cx="24" cy="36" rx="14" ry="4" fill="#8c5f3c"/><path d="M24 26c-1-9-6-15-12-17 1 7 6 13 12 17zm0 0c0-9 3-17 8-20 1 7-2 14-8 20zm0 0c3-7 9-11 15-10-2 6-8 9-15 10z" fill="#5fae5c"/><path d="M18 30c0-4 3-6 6-6s6 2 6 6c0 3-3 6-6 6s-6-3-6-6z" fill="#f28a2e"/></svg>',
+};
+const icon = (name, cls = "") => `<span class="${cls}" aria-hidden="true">${ICONS[name]}</span>`;
+
+/* ---------- 3. SPECIES（動物の種類） ----------
+   新しい動物を増やすとき：
+     ① ここに1つ書き足す（id は英数字）
+     ② build に見た目を作る関数を書く（後で3Dモデルにするなら glb にファイル名を書くだけ）
+   glb: "models/usagi.glb" のように書くと、そのモデルが表示されます（同じリポジトリに置く）。
+        モデルの時は「全身の動き」だけになります（耳だけ動く、まばたき等は作った見た目の時だけ）。 */
+const SPECIES = {
+  usagi: {
+    name: "うさぎ", food: "carrot", foodName: "にんじん", foodWhere: "farm",
+    desc: "たれ耳のふわふわうさぎ。にんじんが大好き。",
+    glb: null,          // TODO: Meshyなどで作ったモデルに差し替えるときはここにファイル名
+    glbScale: 1,        // モデルの大きさ調整
+    build: buildRabbit,
+  },
+  pengin: {
+    name: "ペンギン", food: "fish", foodName: "さかな", foodWhere: "fish",
+    desc: "よちよち歩きのペンギン。おさかなをあげると喜ぶよ。",
+    glb: null,
+    glbScale: 1,
+    build: buildPenguin,
+  },
+};
+// まだいない動物（図鑑の「？？？」の枠の数）
+const LOCKED_SLOTS = 2;
+
+/* ---------- 4. Save（スマホのブラウザに保存） ---------- */
+const SAVE_KEY = "doubutsu-save-v1";
+const Save = {
+  data: null,
+  fresh() {
+    const animals = {};
+    for (const id of Object.keys(SPECIES)) animals[id] = { hunger: 70, bond: 10, energy: 80, care: 0, petCare: 0, petHour: 0, seen: [0] };
+    const plots = Array.from({ length: CONFIG.plots }, () => ({ state: "empty" }));
+    return { v: 1, current: "usagi", animals, items: { carrot: 2, fish: 2 }, plots, last: Date.now() };
+  },
+  load() {
+    let d = null;
+    try { d = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (_) {}
+    this.data = d && d.v === 1 ? d : this.fresh();
+    // あとから動物が増えても、古いデータに足す
+    for (const id of Object.keys(SPECIES)) {
+      if (!this.data.animals[id]) this.data.animals[id] = { hunger: 70, bond: 10, energy: 80, care: 0, petCare: 0, petHour: 0, seen: [0] };
+    }
+    if (!SPECIES[this.data.current]) this.data.current = Object.keys(SPECIES)[0];
+    while (this.data.plots.length < CONFIG.plots) this.data.plots.push({ state: "empty" });
+  },
+  store() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.data)); } catch (_) {} },
+  reset() { this.data = this.fresh(); this.store(); },
+};
+const clamp = (v) => Math.max(0, Math.min(100, v));
+function stageOf(a) { let s = 0; CONFIG.stages.forEach((st, i) => { if (a.care >= st.care) s = i; }); return s; }
+
+/** 前回から今までの時間ぶん、数値を進める。戻り値は経過時間（時間） */
+function applyTime() {
+  const d = Save.data, now = Date.now();
+  const hours = Math.min(CONFIG.maxAwayHours, Math.max(0, (now - d.last) / 3600000));
+  d.last = now;
+  if (hours <= 0) return 0;
+  for (const id of Object.keys(d.animals)) {
+    const a = d.animals[id];
+    const before = a.hunger;
+    a.hunger = clamp(a.hunger + CONFIG.hungerPerHour * hours);
+    a.energy = clamp(a.energy + CONFIG.energyPerHour * hours);
+    // おなかが30を切っていた時間だけ、なかよしが減る
+    const hungryHours = before <= 30 ? hours : Math.max(0, hours - (before - 30) / -CONFIG.hungerPerHour);
+    a.bond = clamp(a.bond + CONFIG.bondPerHourWhenHungry * hungryHours);
+  }
+  return hours;
+}
+
+/* ---------- 5. Stage3D（3D表示と動き） ---------- */
+const M = (c, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .85, metalness: 0 }, extra));
+const SPH = new THREE.SphereGeometry(1, 36, 28);
+function ell(mat, r, sx, sy, sz, x, y, z, parent) {
+  const m = new THREE.Mesh(SPH, mat); m.scale.set(r * sx, r * sy, r * sz); m.position.set(x, y, z);
+  parent.add(m); return m;
+}
+
+/* うさぎ（たれ耳）。返り値：{ root, body, head, ears, eyes, tail, extra } */
+function buildRabbit() {
+  const fur = M(0xf7efe4), pink = M(0xf4a6b6), inner = M(0xf7c3cf), dark = M(0x2d2420, { roughness: .3 });
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  ell(fur, 1, 1, .9, 1.05, 0, .95, 0, body);                       // 胴
+  ell(fur, .5, 1, .7, 1, 0, .9, .6, body);                         // おなか前
+  const tail = ell(fur, .3, 1, 1, 1, 0, .8, -1.0, body);           // しっぽ（丸）
+  // 足（肉球つき）
+  for (const s of [-1, 1]) {
+    ell(fur, .3, 1.05, .7, 1.25, .45 * s, .2, .78, body);
+    const pad = ell(pink, .14, 1, 1, .35, .45 * s, .22, 1.13, body); pad.rotation.x = -.2;
+    ell(fur, .22, .9, 1.2, .9, .38 * s, .95, .82, body);          // 手
+  }
+  const head = new THREE.Group(); head.position.set(0, 1.95, .35); body.add(head);
+  ell(fur, .8, 1.1, .95, 1, 0, 0, 0, head);
+  ell(fur, .3, 1.2, .8, 1, -.18, -.25, .55, head);
+  ell(fur, .3, 1.2, .8, 1, .18, -.25, .55, head);
+  const nose = ell(pink, .08, 1.3, 1, 1, 0, -.1, .8, head);
+  for (const s of [-1, 1]) ell(inner, .17, 1, .65, .35, .52 * s, -.18, .55, head); // ほっぺ
+  const eyes = [-1, 1].map((s) => ell(dark, .11, 1, 1.15, .8, .3 * s, .1, .68, head));
+  const shine = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  eyes.forEach((e) => { const h = new THREE.Mesh(SPH, shine); h.scale.setScalar(.3); h.position.set(.3, .35, .8); e.add(h); });
+  // たれ耳：頭の横から下へ垂れる
+  const ears = [-1, 1].map((s) => {
+    const g = new THREE.Group(); g.position.set(.62 * s, .35, 0); g.rotation.z = .25 * s; head.add(g);
+    ell(fur, .26, 1, 3.1, .55, 0, -.55, 0, g);
+    ell(inner, .17, .8, 2.6, .3, -.03 * s, -.55, .1, g);
+    return g;
+  });
+  return { root, body, head, ears, eyes, tail, nose, earType: "lop" };
+}
+
+/* ペンギン */
+function buildPenguin() {
+  const navy = M(0x2f3a52), white = M(0xfbf8f1), orange = M(0xf5a33c), dark = M(0x1d2230, { roughness: .3 }), pink = M(0xf7b8c4);
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  ell(navy, 1, .95, 1.15, .9, 0, 1.1, 0, body);                   // 胴
+  ell(white, .82, .95, 1.05, .6, 0, 1.0, .42, body);              // おなか
+  for (const s of [-1, 1]) {                                       // 足
+    const f = ell(orange, .28, 1.1, .35, 1.5, .38 * s, .08, .55, body); f.rotation.y = -.2 * s;
+  }
+  const flippers = [-1, 1].map((s) => {                            // つばさ
+    const g = new THREE.Group(); g.position.set(.9 * s, 1.35, 0); body.add(g);
+    ell(navy, .3, .35, 1.6, .9, .05 * s, -.35, 0, g); g.rotation.z = .3 * s; return g;
+  });
+  const head = new THREE.Group(); head.position.set(0, 2.25, .1); body.add(head);
+  ell(navy, .72, 1.05, .95, 1, 0, 0, 0, head);
+  ell(white, .55, 1.15, .85, .6, 0, -.08, .36, head);              // 顔の白
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.13, .3, 16), orange);
+  beak.rotation.x = Math.PI / 2; beak.position.set(0, -.12, .74); head.add(beak);
+  for (const s of [-1, 1]) ell(pink, .12, 1, .65, .35, .4 * s, -.22, .55, head);
+  const eyes = [-1, 1].map((s) => ell(dark, .1, 1, 1.15, .8, .22 * s, .08, .66, head));
+  const shine = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  eyes.forEach((e) => { const h = new THREE.Mesh(SPH, shine); h.scale.setScalar(.3); h.position.set(.3, .35, .8); e.add(h); });
+  return { root, body, head, ears: flippers, eyes, tail: null, nose: beak, earType: "flipper" };
+}
+
+const Stage3D = {
+  init(el) {
+    this.el = el;
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    el.prepend(this.renderer.domElement);
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(34, 1, .1, 100);
+    this.camera.position.set(0, 3.3, 10.5); this.camera.lookAt(0, 1.45, 0);
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcfe0c0, .75));
+    const sun = new THREE.DirectionalLight(0xffffff, .8); sun.position.set(3, 7, 5); this.scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xffeef2, .25); fill.position.set(-4, 2, -3); this.scene.add(fill);
+    // 地面（丸い草地）
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(3.4, 48), M(0xbfe3a6));
+    ground.rotation.x = -Math.PI / 2; this.scene.add(ground);
+    const rim = new THREE.Mesh(new THREE.RingGeometry(3.4, 3.6, 48), M(0xa6d18b));
+    rim.rotation.x = -Math.PI / 2; rim.position.y = .005; this.scene.add(rim);
+    this.shadow = new THREE.Mesh(new THREE.CircleGeometry(1.25, 40), new THREE.MeshBasicMaterial({ color: 0x3b5a2a, transparent: true, opacity: .16 }));
+    this.shadow.rotation.x = -Math.PI / 2; this.shadow.position.y = .01; this.scene.add(this.shadow);
+
+    this.holder = new THREE.Group(); this.scene.add(this.holder);
+    this.rig = null; this.rotY = .35; this.targetRot = null;
+    this.anim = { jump: -1, spin: false, eat: -1, wiggle: 0, happy: 0 };
+    this.blinkAt = 1.5; this.earAt = 3; this.earT = -1; this.earSide = 0;
+    this.raycaster = new THREE.Raycaster();
+    this.running = true;
+    addEventListener("resize", () => this.resize());
+    this.resize();
+    this.clock = new THREE.Clock();
+    const loop = () => { requestAnimationFrame(loop); if (this.running) this.frame(); };
+    loop();
+  },
+  resize() {
+    const w = this.el.clientWidth, h = this.el.clientHeight;
+    if (!w || !h) return;
+    this.renderer.setSize(w, h, false);
+    this.camera.aspect = w / h;
+    // 縦長の画面でも動物が切れないように、横幅が狭いほどカメラを引く
+    const dist = 10.5 * Math.max(1, .62 / this.camera.aspect * .9);
+    this.camera.position.set(0, 3.3 * dist / 10.5, dist); this.camera.lookAt(0, 1.45, 0);
+    this.camera.updateProjectionMatrix();
+  },
+  /** 動物を切り替える（stage はその動物の成長段階） */
+  show(speciesId, stage) {
+    if (this.rig) { this.holder.remove(this.rig.root); }
+    const sp = SPECIES[speciesId];
+    const key = speciesId;
+    if (sp.glb) {
+      this.rig = { root: new THREE.Group(), body: new THREE.Group(), head: null, ears: [], eyes: [], tail: null, nose: null };
+      this.rig.root.add(this.rig.body);
+      loadGLB(sp.glb).then((obj) => { if (this.rig && this.rig.key === key) { obj.scale.setScalar(sp.glbScale || 1); this.rig.body.add(obj); } });
+    } else {
+      this.rig = sp.build();
+    }
+    this.rig.key = key;
+    this.holder.add(this.rig.root);
+    this.setStage(stage, false);
+  },
+  setStage(stage, celebrate) {
+    const st = CONFIG.stages[stage];
+    this.baseScale = st.scale;
+    if (this.rig.head) this.rig.head.scale.setScalar(st.head);
+    if (celebrate) { this.anim.jump = 0; this.anim.spin = true; }
+  },
+  /** 画面上の点が動物に当たっているか */
+  hit(clientX, clientY) {
+    if (!this.rig) return false;
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const v = new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    this.raycaster.setFromCamera(v, this.camera);
+    return this.raycaster.intersectObject(this.rig.root, true).length > 0;
+  },
+  /** 3D上の頭の位置を、画面の座標にする（ごはんを飛ばす先・ハートを出す位置） */
+  headScreen() {
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const p = new THREE.Vector3();
+    (this.rig && this.rig.head ? this.rig.head : this.holder).getWorldPosition(p);
+    if (!(this.rig && this.rig.head)) p.y += 2;
+    p.project(this.camera);
+    return { x: (p.x + 1) / 2 * r.width, y: (1 - p.y) / 2 * r.height };
+  },
+  faceFront() { const two = Math.PI * 2; const cur = ((this.rotY % two) + two) % two; let d = -cur; if (d < -Math.PI) d += two; this.targetRot = this.rotY + d; },
+  jump(spin = false) { if (this.anim.jump < 0) { this.anim.jump = 0; this.anim.spin = spin; } },
+  eat() { this.faceFront(); this.anim.eat = 0; },
+  wiggle() { this.anim.wiggle = Math.min(1, this.anim.wiggle + .5); },
+
+  frame() {
+    const dt = Math.min(this.clock.getDelta(), .05), t = this.clock.elapsedTime, rig = this.rig;
+    if (!rig) { this.renderer.render(this.scene, this.camera); return; }
+    const mood = Care.mood();   // "happy" | "normal" | "sad"
+    if (this.targetRot !== null) {
+      this.rotY += (this.targetRot - this.rotY) * Math.min(1, dt * 7);
+      if (Math.abs(this.targetRot - this.rotY) < .002) { this.rotY = this.targetRot; this.targetRot = null; }
+    } else if (!Care.dragging) {
+      this.rotY += Math.sin(t * .4) * dt * .15;   // ゆっくり首をふるように
+    }
+    // ジャンプ（踏み込み→空中→着地でむにっ）
+    let y = 0, sy = 1 + Math.sin(t * (mood === "sad" ? 1.2 : 2.3)) * .02, sxz = 2 - sy, spinA = 0;
+    const a = this.anim;
+    if (a.jump >= 0) {
+      a.jump += dt; const T = a.jump;
+      if (T < .14) { const k = Math.sin(T / .14 * Math.PI / 2); sy = 1 - .2 * k; sxz = 1 + .12 * k; }
+      else if (T < .74) { const k = (T - .14) / .6; y = Math.sin(k * Math.PI) * 1.3; sy = 1 + .12 * Math.sin(k * Math.PI) * (1 - k); sxz = 1 - .05 * (1 - k); if (a.spin) spinA = k * Math.PI * 2; }
+      else if (T < .94) { const k = Math.sin((T - .74) / .2 * Math.PI); sy = 1 - .16 * k; sxz = 1 + .1 * k; }
+      else { a.jump = -1; a.spin = false; }
+    }
+    // 食べる（頭を3回うなずく）
+    if (rig.head) rig.head.rotation.x = 0;
+    if (a.eat >= 0) {
+      a.eat += dt;
+      if (rig.head) rig.head.rotation.x = Math.max(0, Math.sin(a.eat * 14)) * .25;
+      else { sy *= 1 - Math.max(0, Math.sin(a.eat * 14)) * .06; }
+      if (a.eat > 1.4) a.eat = -1;
+    }
+    // なでられて体をふるふる
+    a.wiggle = Math.max(0, a.wiggle - dt * 1.5);
+    const wig = Math.sin(t * 30) * .05 * a.wiggle;
+    this.holder.rotation.set(0, this.rotY + spinA, wig);
+    rig.body.position.y = y;
+    const s = this.baseScale;
+    rig.root.scale.set(s * sxz, s * sy, s * sxz);
+    this.shadow.scale.setScalar(s * (1 - y * .25));
+    this.shadow.material.opacity = .16 - y * .05;
+
+    // ここから下は「作った見た目」の時だけ（3Dモデルの時は部位がないので何もしない）
+    // 耳・つばさ
+    rig.ears.forEach((e, i) => {
+      const side = i ? 1 : -1;
+      const air = a.jump > .14 && a.jump < .74;
+      if (rig.earType === "lop") {
+        let z = .25 * side + (air ? -.35 * side : 0) + (mood === "sad" ? .12 * side : 0);
+        e.rotation.z = z + Math.sin(t * 1.6 + i) * .03;
+        e.rotation.x = air ? -.4 : 0;
+      } else {
+        // ペンギンのつばさ：うれしい時・ジャンプ中はパタパタ
+        const flap = (air || mood === "happy" && Math.sin(t * .7) > .6) ? Math.sin(t * 22) * .5 : 0;
+        e.rotation.z = (.3 + (mood === "sad" ? -.15 : 0)) * side + flap * side;
+      }
+    });
+    // まばたき
+    if (rig.eyes.length && t > this.blinkAt) {
+      const b = t - this.blinkAt, k = b < .1 ? 1 - b / .1 * .9 : b < .2 ? .1 + (b - .1) / .1 * .9 : 1;
+      rig.eyes.forEach((e) => e.scale.y = .11 * 1.15 * k * (rig.earType === "flipper" ? .1 / .11 : 1));
+      if (b > .2) this.blinkAt = t + 2 + Math.random() * 3;
+    }
+    // うさぎ：片耳ぴくっ／鼻ひくひく／しっぽふるふる
+    if (rig.earType === "lop") {
+      if (t > this.earAt && this.earT < 0) { this.earT = 0; this.earSide = Math.random() < .5 ? 0 : 1; }
+      if (this.earT >= 0) {
+        this.earT += dt;
+        rig.ears[this.earSide].rotation.x = Math.sin(this.earT * 28) * .18 * Math.max(0, 1 - this.earT / .4);
+        if (this.earT > .4) { this.earT = -1; this.earAt = t + 3 + Math.random() * 4; }
+      }
+      if (rig.nose) rig.nose.position.y = -.1 + (Math.sin(t * .9) > .3 ? Math.max(0, Math.sin(t * 14)) * .015 : 0);
+      if (rig.tail) rig.tail.position.x = Math.sin(t * 9) * .03 * (Math.sin(t * .7) > .6 ? 1 : 0);
+    }
+    // うれしい時はときどき自分でぴょん
+    if (mood === "happy" && a.jump < 0 && Math.random() < dt * .08) this.jump(false);
+    this.renderer.render(this.scene, this.camera);
+  },
+};
+
+/* 3Dモデル（GLB）の読み込み。使う時だけ部品を読み込む */
+let gltfLoaderPromise = null;
+function loadGLB(path) {
+  if (!gltfLoaderPromise) {
+    gltfLoaderPromise = new Promise((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js";
+      s.onload = () => res(new THREE.GLTFLoader()); s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  return gltfLoaderPromise.then((loader) => new Promise((res, rej) => {
+    loader.load(path, (g) => {
+      const obj = g.scene;
+      // 足元を地面に、中心をまん中に合わせる
+      const box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
+      box.getSize(size); box.getCenter(c);
+      const k = 2.8 / Math.max(size.y, .001);
+      obj.scale.setScalar(k);
+      obj.position.set(-c.x * k, -box.min.y * k, -c.z * k);
+      const wrap = new THREE.Group(); wrap.add(obj); res(wrap);
+    }, undefined, rej);
+  }));
+}
+
+/* ---------- 6. Care（おせわ画面） ---------- */
+const $ = (id) => document.getElementById(id);
+const Care = {
+  dragging: false,
+  init() {
+    $("btnPet").querySelector("#petIcon").innerHTML = ICONS.pet;
+    $("btnPlay").querySelector("#playIcon").innerHTML = ICONS.ball;
+    $("prevA").onclick = () => this.switchAnimal(-1);
+    $("nextA").onclick = () => this.switchAnimal(1);
+    $("btnFeed").onclick = () => this.feed();
+    $("btnPet").onclick = () => { this.say(`${this.sp().name}を指でなでてね`); Stage3D.faceFront(); };
+    $("btnPlay").onclick = () => this.play();
+    this.initTouch();
+    this.refresh(true);
+  },
+  id() { return Save.data.current; },
+  sp() { return SPECIES[this.id()]; },
+  a() { return Save.data.animals[this.id()]; },
+  mood() {
+    const a = this.a();
+    if (a.hunger < 25 || a.energy < 15) return "sad";
+    if (a.bond >= 70 && a.hunger >= 50) return "happy";
+    return "normal";
+  },
+  switchAnimal(d) {
+    const ids = Object.keys(SPECIES);
+    const i = (ids.indexOf(this.id()) + d + ids.length) % ids.length;
+    Save.data.current = ids[i]; Save.store();
+    this.refresh(true);
+    this.greet();
+  },
+  refresh(rebuild) {
+    const a = this.a(), sp = this.sp(), stage = stageOf(a);
+    if (rebuild) Stage3D.show(this.id(), stage);
+    $("aName").textContent = sp.name;
+    const next = CONFIG.stages[stage + 1];
+    $("aStage").textContent = CONFIG.stages[stage].name + (next ? `　つぎまで ${Math.max(0, next.care - a.care)}` : "　大きくなったね");
+    const set = (v, m, val) => { $(v).textContent = Math.round(val); $(m).style.width = val + "%"; };
+    set("vHun", "mHun", a.hunger); set("vBond", "mBond", a.bond); set("vEng", "mEng", a.energy);
+    const n = Save.data.items[sp.food] || 0;
+    $("foodBadge").textContent = n;
+    $("foodBadge").classList.toggle("zero", n === 0);
+    $("feedIcon").innerHTML = ICONS[sp.food];
+    const multi = Object.keys(SPECIES).length > 1;
+    $("prevA").disabled = $("nextA").disabled = !multi;
+  },
+  /** おせわポイントを足して、成長したらお祝い */
+  addCare(n) {
+    const a = this.a(), before = stageOf(a);
+    a.care += n;
+    const after = stageOf(a);
+    if (after > before) {
+      if (!a.seen.includes(after)) a.seen.push(after);
+      Stage3D.setStage(after, true);
+      const lv = document.createElement("div");
+      lv.className = "levelup"; lv.textContent = `${CONFIG.stages[after].name}に\nなったよ！`;
+      lv.style.whiteSpace = "pre-line";
+      $("stage").appendChild(lv); setTimeout(() => lv.remove(), 2200);
+      this.say(`${this.sp().name}が ${CONFIG.stages[after].name}に 成長した！`, 3000);
+    }
+  },
+  feed() {
+    const sp = this.sp(), a = this.a(), items = Save.data.items;
+    if (!items[sp.food]) {
+      this.say(`${sp.foodName}がないよ。${sp.foodWhere === "farm" ? "はたけで育てよう" : "つりで釣ってこよう"}`, 2600);
+      return;
+    }
+    if (a.hunger >= 98) { this.say("おなかいっぱいみたい"); Stage3D.wiggle(); return; }
+    items[sp.food]--;
+    // ごはんがボタンから動物の口へ飛ぶ
+    const btn = $("btnFeed").getBoundingClientRect(), st = $("stage").getBoundingClientRect(), hs = Stage3D.headScreen();
+    const f = document.createElement("div");
+    f.className = "flyfood"; f.innerHTML = ICONS[sp.food];
+    f.style.left = (btn.left + btn.width / 2 - 22) + "px"; f.style.top = (btn.top) + "px"; f.style.position = "fixed";
+    document.body.appendChild(f);
+    requestAnimationFrame(() => {
+      f.style.transform = `translate(${st.left + hs.x - (btn.left + btn.width / 2)}px, ${st.top + hs.y + 20 - btn.top}px) scale(.7)`;
+      f.style.opacity = "0";
+    });
+    setTimeout(() => f.remove(), 800);
+    setTimeout(() => {
+      Stage3D.eat();
+      a.hunger = clamp(a.hunger + CONFIG.feed.hunger); a.bond = clamp(a.bond + CONFIG.feed.bond); a.energy = clamp(a.energy + CONFIG.feed.energy);
+      this.hearts(3);
+      this.say(["もぐもぐ…おいしい！", "ぱくっ！", "ごちそうさま！"][Math.floor(Math.random() * 3)]);
+      this.addCare(CONFIG.feed.care);
+      Save.store(); this.refresh(false);
+    }, 550);
+  },
+  play() {
+    const a = this.a();
+    if (a.energy < CONFIG.play.needEnergy) { this.say("つかれてるみたい。少し休ませてあげてね", 2600); return; }
+    Stage3D.faceFront(); Stage3D.jump(true);
+    a.hunger = clamp(a.hunger + CONFIG.play.hunger); a.bond = clamp(a.bond + CONFIG.play.bond); a.energy = clamp(a.energy + CONFIG.play.energy);
+    setTimeout(() => this.hearts(2), 500);
+    this.say(["わーい！", "くるっ！", "たのしい！"][Math.floor(Math.random() * 3)]);
+    this.addCare(CONFIG.play.care);
+    Save.store(); this.refresh(false);
+  },
+  /** 動物の上を指でこすると「なでる」、何もない所をドラッグすると回る、動物をタップでぴょん */
+  initTouch() {
+    const el = $("stage");
+    let mode = null, lastX = 0, moved = 0, petAcc = 0, lastPetPos = null;
+    el.addEventListener("pointerdown", (e) => {
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+      lastX = e.clientX; moved = 0; petAcc = 0; lastPetPos = { x: e.clientX, y: e.clientY };
+      mode = Stage3D.hit(e.clientX, e.clientY) ? "pet" : "rotate";
+      this.dragging = true; Stage3D.targetRot = null;
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (!mode) return;
+      const dx = e.clientX - lastX; lastX = e.clientX; moved += Math.abs(dx);
+      if (mode === "rotate") { Stage3D.rotY += dx * .012; return; }
+      // なでる：指が動いた距離に応じて
+      const dist = Math.hypot(e.clientX - lastPetPos.x, e.clientY - lastPetPos.y);
+      lastPetPos = { x: e.clientX, y: e.clientY };
+      if (!Stage3D.hit(e.clientX, e.clientY)) return;
+      petAcc += dist;
+      if (petAcc > 60) {
+        petAcc = 0; this.petOnce(e.clientX, e.clientY);
+      }
+    });
+    const end = () => {
+      if (mode === "pet" && moved < 8) Stage3D.jump(false);
+      mode = null; this.dragging = false;
+    };
+    el.addEventListener("pointerup", end);
+    el.addEventListener("pointercancel", end);
+  },
+  petOnce(x, y) {
+    const a = this.a();
+    Stage3D.wiggle();
+    a.bond = clamp(a.bond + CONFIG.pet.bond);
+    // 1時間あたり、なでる成長ポイントに上限（なで続けるだけで育たないように）
+    const hour = Math.floor(Date.now() / 3600000);
+    if (a.petHour !== hour) { a.petHour = hour; a.petCare = 0; }
+    a.petTicks = (a.petTicks || 0) + 1;
+    if (a.petTicks >= 4 && a.petCare < CONFIG.pet.maxCarePerHour) { a.petTicks = 0; a.petCare++; this.addCare(CONFIG.pet.care); }
+    const r = $("stage").getBoundingClientRect();
+    this.heartAt(x - r.left, y - r.top);
+    if (Math.random() < .15) this.say(["きもちいい〜", "もっと！", "えへへ"][Math.floor(Math.random() * 3)]);
+    Save.store(); this.refresh(false);
+  },
+  heartAt(x, y) {
+    const h = document.createElement("span");
+    h.className = "heart"; h.innerHTML = ICONS.heartPink;
+    h.style.left = x + "px"; h.style.top = y + "px";
+    $("fx").appendChild(h); setTimeout(() => h.remove(), 1000);
+  },
+  hearts(n) {
+    const p = Stage3D.headScreen();
+    for (let i = 0; i < n; i++) setTimeout(() => this.heartAt(p.x + (Math.random() - .5) * 80, p.y - 20 + (Math.random() - .5) * 30), i * 150);
+  },
+  sayTimer: 0,
+  say(text, ms = 1800) {
+    const b = $("bubble"); b.textContent = text; b.classList.remove("off");
+    clearTimeout(this.sayTimer); this.sayTimer = setTimeout(() => b.classList.add("off"), ms);
+  },
+  greet(hours = 0) {
+    const a = this.a(), sp = this.sp();
+    if (hours >= 1) {
+      const h = hours >= 24 ? `${Math.floor(hours / 24)}日` : `${Math.floor(hours)}時間`;
+      if (a.hunger < 30) this.say(`${h}ぶり！ ${sp.name}はおなかがすいてるみたい`, 3500);
+      else this.say(`${h}ぶり！ おかえりなさい`, 3000);
+      return;
+    }
+    const m = this.mood();
+    if (m === "sad") this.say(a.hunger < 25 ? `${sp.name}はおなかがすいてるみたい` : `${sp.name}は少しつかれてるみたい`, 2800);
+    else if (m === "happy") this.say(`${sp.name}はごきげん！`);
+    else this.say(`${sp.name}がこっちを見てる`);
+  },
+};
+
+/* ---------- 7. Farm（はたけ） ---------- */
+const Farm = {
+  init() {
+    $("carrotIcon").innerHTML = ICONS.carrot;
+    this.render();
+    setInterval(() => { if (!$("farm").hidden) this.render(); }, 1000);
+  },
+  left(p) { return Math.max(0, p.readyAt - Date.now()) / 1000; },
+  render() {
+    $("carrotCount").textContent = Save.data.items.carrot || 0;
+    const wrap = $("plots");
+    // ボタンは作り直さずに中身だけ書き換える（毎秒の更新中でもタップが消えないように）
+    while (wrap.children.length < Save.data.plots.length) {
+      const b = document.createElement("button");
+      b.type = "button";
+      const i = wrap.children.length;
+      b.onclick = (e) => this.tap(i, !!(e.target.closest && e.target.closest(".water")));
+      wrap.appendChild(b);
+    }
+    Save.data.plots.forEach((p, i) => {
+      const b = wrap.children[i];
+      b.className = "plot";
+      let pic, label, water = null;
+      if (p.state === "empty") { pic = "plot0"; label = "たねをまく"; }
+      else {
+        const left = this.left(p), total = p.total || CONFIG.growSeconds, prog = 1 - left / total;
+        if (left <= 0) { pic = "plot3"; label = "しゅうかく！"; b.classList.add("ready"); }
+        else {
+          pic = prog < .5 ? "plot1" : "plot2";
+          const secs = Math.ceil(left), m = Math.floor(secs / 60), s = secs % 60;
+          label = m ? `あと${m}分${s}秒` : `あと${secs}秒`;
+          if (!p.watered) water = true;
+        }
+      }
+      b.innerHTML = ICONS[pic] + `<small>${label}</small>`;
+      if (water) {
+        const w = document.createElement("span");
+        w.className = "water"; w.textContent = "水やり"; w.setAttribute("role", "button");
+        b.querySelector("small").after(w);
+      }
+      b.setAttribute("aria-label", label);
+    });
+  },
+  tap(i, isWater) {
+    const p = Save.data.plots[i], now = Date.now();
+    if (p.state === "empty") {
+      Save.data.plots[i] = { state: "grow", readyAt: now + CONFIG.growSeconds * 1000, total: CONFIG.growSeconds, watered: false };
+    } else if (this.left(p) <= 0) {
+      const got = Math.random() < .25 ? 2 : 1;
+      Save.data.items.carrot = (Save.data.items.carrot || 0) + got;
+      Save.data.plots[i] = { state: "empty" };
+      toast(`にんじんを ${got}本 しゅうかく！`);
+    } else if (isWater && !p.watered) {
+      const left = p.readyAt - now;
+      p.readyAt = now + left * CONFIG.waterCut; p.watered = true;
+      toast("水をあげた！ 早く育つよ");
+    }
+    Save.store(); this.render(); Care.refresh(false);
+  },
+};
+
+/* 画面下のお知らせ（短い文） */
+function toast(text) {
+  let t = document.getElementById("toast");
+  if (!t) {
+    t = document.createElement("div"); t.id = "toast";
+    Object.assign(t.style, { position: "fixed", left: "50%", bottom: "calc(84px + env(safe-area-inset-bottom, 0px))", transform: "translateX(-50%)",
+      background: "#3b3552", color: "#fff", padding: "8px 16px", borderRadius: "999px", fontWeight: "700", fontSize: "14px",
+      zIndex: 30, transition: "opacity .3s", pointerEvents: "none", whiteSpace: "nowrap" });
+    document.body.appendChild(t);
+  }
+  t.textContent = text; t.style.opacity = "1";
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.style.opacity = "0"), 1800);
+}
+
+/* ---------- 8. Fishing（つり） ----------
+   流れ：なげる → 待つ → うきが沈む(!) → タップ → ゲージ → 黄色でタップ → 釣れた */
+const Fishing = {
+  init() {
+    $("fishIcon").innerHTML = ICONS.fish;
+    this.cv = $("fishCanvas"); this.ctx = this.cv.getContext("2d");
+    this.state = "idle"; this.t = 0; this.msg = "";
+    $("fishBtn").onclick = () => this.button();
+    $("fishWrap").addEventListener("pointerdown", () => { if (this.state === "bite" || this.state === "gauge") this.button(); });
+    let last = performance.now();
+    const loop = (now) => { requestAnimationFrame(loop); const dt = Math.min(.05, (now - last) / 1000); last = now; if (!$("fish").hidden) this.frame(dt); };
+    requestAnimationFrame(loop);
+    this.render();
+  },
+  render() { $("fishCount").textContent = Save.data.items.fish || 0; },
+  setBtn(text, on = true) { const b = $("fishBtn"); b.textContent = text; b.disabled = !on; b.style.opacity = on ? 1 : .6; },
+  button() {
+    if (this.state === "idle" || this.state === "result") {
+      this.state = "wait"; this.t = 0; this.waitFor = CONFIG.biteWait[0] + Math.random() * (CONFIG.biteWait[1] - CONFIG.biteWait[0]);
+      this.msg = ""; this.setBtn("…まってね", false);
+    } else if (this.state === "bite") {
+      this.state = "gauge"; this.t = 0;
+      this.zone = .22 + Math.random() * .5; this.zoneW = .2; this.speed = 1.1 + Math.random() * .5;
+      this.setBtn("ここ！ でタップ");
+    } else if (this.state === "gauge") {
+      const x = this.cursor;
+      if (x >= this.zone && x <= this.zone + this.zoneW) {
+        const size = Math.random(); const got = size > .85 ? 3 : size > .5 ? 2 : 1;
+        Save.data.items.fish = (Save.data.items.fish || 0) + got;
+        this.msg = got === 3 ? `大物！ さかな ${got}ひき` : `さかな ${got}ひき つれた！`; this.caught = got;
+        Save.store(); this.render(); Care.refresh(false);
+      } else { this.msg = "にげられちゃった…"; this.caught = 0; }
+      this.state = "result"; this.t = 0; this.setBtn("もういちど なげる");
+    }
+  },
+  frame(dt) {
+    const cv = this.cv, r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio, 2);
+    if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+    const c = this.ctx, W = cv.width, H = cv.height, u = W / 100;
+    this.t += dt;
+    if (this.state === "wait" && this.t > this.waitFor) { this.state = "bite"; this.t = 0; this.setBtn("いまだ！ タップ"); if (navigator.vibrate) try { navigator.vibrate(80); } catch (_) {} }
+    if (this.state === "bite" && this.t > CONFIG.biteWindow) { this.state = "result"; this.t = 0; this.msg = "おそかった…"; this.caught = 0; this.setBtn("もういちど なげる"); }
+    // 空と海
+    c.fillStyle = "#cfe9f3"; c.fillRect(0, 0, W, H * .32);
+    const sea = c.createLinearGradient(0, H * .32, 0, H); sea.addColorStop(0, "#6cc0e8"); sea.addColorStop(1, "#2f86c2");
+    c.fillStyle = sea; c.fillRect(0, H * .32, W, H);
+    // 波
+    c.strokeStyle = "rgba(255,255,255,.5)"; c.lineWidth = 1.5 * u;
+    for (let k = 0; k < 5; k++) {
+      c.beginPath(); const yy = H * (.42 + k * .12);
+      for (let x = 0; x <= W; x += 4 * u) c.lineTo(x, yy + Math.sin(x / (8 * u) + performance.now() / 700 + k) * 1.2 * u);
+      c.stroke();
+    }
+    // 雲
+    c.fillStyle = "#fff";
+    [[20, 12, 7], [28, 10, 9], [70, 18, 6], [77, 16, 8]].forEach(([x, y, rr]) => { c.beginPath(); c.arc(x * u, y * u, rr * u, 0, 7); c.fill(); });
+    // 桟橋とペンギン（後ろ姿）
+    c.fillStyle = "#b98557"; c.fillRect(0, H * .86, W * .38, H * .14);
+    c.fillStyle = "#2f3a52"; c.beginPath(); c.ellipse(16 * u, H * .86 - 9 * u, 7 * u, 10 * u, 0, 0, 7); c.fill();
+    c.beginPath(); c.arc(16 * u, H * .86 - 21 * u, 5.5 * u, 0, 7); c.fill();
+    c.fillStyle = "#f5a33c"; c.fillRect(11 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u); c.fillRect(17 * u, H * .86 - 1.5 * u, 4 * u, 1.5 * u);
+    // つりざお
+    const tipX = 46 * u, tipY = H * .86 - 40 * u;
+    c.strokeStyle = "#6b4a2b"; c.lineWidth = 1.6 * u; c.beginPath(); c.moveTo(20 * u, H * .86 - 14 * u); c.lineTo(tipX, tipY); c.stroke();
+    // うき
+    if (this.state !== "idle") {
+      const bx = 68 * u, base = H * .58;
+      let by = base + Math.sin(performance.now() / 400) * 1.2 * u;
+      if (this.state === "wait" && this.t < .5) by = H * .3 + (base - H * .3) * (this.t / .5);
+      if (this.state === "bite") by = base + 4 * u + Math.sin(this.t * 40) * 1.5 * u;
+      if (this.state === "gauge" || this.state === "result") by = base + 2 * u;
+      c.strokeStyle = "rgba(255,255,255,.85)"; c.lineWidth = .5 * u; c.beginPath(); c.moveTo(tipX, tipY); c.quadraticCurveTo(62 * u, tipY + 10 * u, bx, by - 2.6 * u); c.stroke();
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(bx, by, 2.6 * u, 0, Math.PI); c.fill();
+      c.fillStyle = "#f2564b"; c.beginPath(); c.arc(bx, by, 2.6 * u, Math.PI, 0); c.fill();
+      if (this.state === "bite") {
+        c.fillStyle = "#fff"; c.font = `900 ${16 * u}px ${getComputedStyle(document.body).fontFamily}`; c.textAlign = "center";
+        c.lineWidth = 2 * u; c.strokeStyle = "#f2564b"; c.strokeText("！", bx, by - 8 * u); c.fillText("！", bx, by - 8 * u);
+        // 波紋
+        c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = .6 * u;
+        c.beginPath(); c.ellipse(bx, by + 1 * u, (4 + (this.t * 20) % 8) * u, (1.5 + (this.t * 8) % 3) * u, 0, 0, 7); c.stroke();
+      }
+    }
+    // ゲージ
+    if (this.state === "gauge") {
+      this.cursor = (Math.sin(this.t * this.speed * Math.PI) + 1) / 2;
+      const gx = 10 * u, gw = 80 * u, gy = H * .16, gh = 6 * u;
+      c.fillStyle = "rgba(255,255,255,.9)"; roundRect(c, gx - u, gy - u, gw + 2 * u, gh + 2 * u, 3 * u); c.fill();
+      c.fillStyle = "#e4e0ee"; roundRect(c, gx, gy, gw, gh, 2.5 * u); c.fill();
+      c.fillStyle = "#f6c453"; c.fillRect(gx + gw * this.zone, gy, gw * this.zoneW, gh);
+      c.fillStyle = "#3b3552"; c.fillRect(gx + gw * this.cursor - .8 * u, gy - 2 * u, 1.6 * u, gh + 4 * u);
+    }
+    // 結果
+    if (this.state === "result" && this.msg) {
+      c.fillStyle = "rgba(255,255,255,.92)"; roundRect(c, 12 * u, H * .1, 76 * u, 14 * u, 4 * u); c.fill();
+      c.fillStyle = this.caught ? "#3b3552" : "#7d7796"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.font = `900 ${6 * u}px ${getComputedStyle(document.body).fontFamily}`; c.fillText(this.msg, 50 * u, H * .1 + 7 * u);
+      c.textBaseline = "alphabetic";
+    }
+    if (this.state === "idle") {
+      c.fillStyle = "rgba(255,255,255,.92)"; roundRect(c, 16 * u, H * .1, 68 * u, 13 * u, 4 * u); c.fill();
+      c.fillStyle = "#3b3552"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.font = `700 ${5 * u}px ${getComputedStyle(document.body).fontFamily}`; c.fillText("下のボタンで つりざおをなげよう", 50 * u, H * .1 + 6.5 * u);
+      c.textBaseline = "alphabetic";
+    }
+  },
+};
+function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+
+/* ---------- 9. Zukan（ずかん） ---------- */
+const Zukan = {
+  render() {
+    const g = $("zgrid"); g.textContent = "";
+    for (const [id, sp] of Object.entries(SPECIES)) {
+      const a = Save.data.animals[id];
+      const card = document.createElement("div"); card.className = "zcard";
+      const face = id === "usagi" ? ZFACE.usagi : ZFACE.pengin;
+      card.innerHTML = `<div class="zface">${face || ""}</div><b></b><p></p><div class="zstages"></div>`;
+      card.querySelector("b").textContent = sp.name;
+      card.querySelector("p").textContent = sp.desc;
+      const st = card.querySelector(".zstages");
+      CONFIG.stages.forEach((s, i) => {
+        const sp2 = document.createElement("span");
+        const got = a.seen.includes(i);
+        sp2.textContent = got ? s.name : "？？？"; if (got) sp2.className = "got";
+        st.appendChild(sp2);
+      });
+      g.appendChild(card);
+    }
+    for (let i = 0; i < LOCKED_SLOTS; i++) {
+      const card = document.createElement("div"); card.className = "zcard lock";
+      card.innerHTML = `<div class="zface"></div><b>？？？</b><p>まだ見ぬなかま</p>`;
+      g.appendChild(card);
+    }
+  },
+};
+const ZFACE = {
+  usagi: '<svg viewBox="0 0 64 56"><ellipse cx="14" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="50" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="32" cy="28" rx="19" ry="17" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><circle cx="25" cy="27" r="2.6" fill="#2d2420"/><circle cx="39" cy="27" r="2.6" fill="#2d2420"/><ellipse cx="20" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="44" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="32" cy="32" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
+  pengin: '<svg viewBox="0 0 64 56"><ellipse cx="32" cy="29" rx="19" ry="18" fill="#2f3a52"/><ellipse cx="32" cy="32" rx="14" ry="12" fill="#fbf8f1"/><circle cx="26" cy="29" r="2.4" fill="#1d2230"/><circle cx="38" cy="29" r="2.4" fill="#1d2230"/><path d="M29 34l3 4 3-4z" fill="#f5a33c"/><ellipse cx="22" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/><ellipse cx="42" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/></svg>',
+};
+
+/* ---------- 10. 起動 ---------- */
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  ["care", "farm", "fish", "zukan"].forEach((n) => ($(n).hidden = n !== name));
+  Stage3D.running = name === "care";
+  if (name === "care") { Stage3D.resize(); Care.refresh(false); }
+  if (name === "farm") Farm.render();
+  if (name === "fish") Fishing.render();
+  if (name === "zukan") Zukan.render();
+}
+
+Save.load();
+const away = applyTime();
+Save.store();
+document.querySelectorAll("[data-icon]").forEach((s) => (s.innerHTML = ICONS[s.dataset.icon]));
+document.querySelectorAll(".tab").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+Stage3D.init($("stage"));
+Care.init();
+Farm.init();
+Fishing.init();
+setTimeout(() => Care.greet(away), 400);
+
+// 開いている間も1分ごとに時間を進める
+setInterval(() => { applyTime(); Save.store(); Care.refresh(false); }, 60000);
+// 別のアプリから戻ってきたときにも時間を進める
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") { const h = applyTime(); Save.store(); Care.refresh(false); if (h >= 1) Care.greet(h); }
+});
+
+// データのリセット
+$("resetBtn").onclick = () => ($("resetConfirm").hidden = false);
+$("resetNo").onclick = () => ($("resetConfirm").hidden = true);
+$("resetYes").onclick = () => { Save.reset(); $("resetConfirm").hidden = true; Care.refresh(true); Farm.render(); Fishing.render(); Zukan.render(); toast("はじめからにしました"); };
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>
