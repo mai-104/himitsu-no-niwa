@@ -415,7 +415,7 @@ const WEAR = {
 //   glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示（その時は全身の動きだけ）
 const SPECIES = {
   usagi:   { name: "うさぎ",     price: 40,  level: 1, foods: ["carrot", "strawberry", "pumpkin"], desc: "たれ耳のふわふわうさぎ。にんじんが大好き。", glb: null, build: buildRabbit },
-  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: null, build: buildPenguin,
+  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: "models/penguin.glb", build: buildPenguin,   // Meshy 6 Lite で作ったモデル
              looks: [{ body: 0x9095a0 }, { body: 0x5b6784 }, {}] },   // あかちゃんは灰色、こどもは灰色と紺のあいだ
   hamster: { name: "ハムスター", price: 160, level: 3, foods: ["sunseed", "strawberry", "pumpkin"], desc: "ほっぺがふくらむハムスター。ひまわりのたねが好き。", glb: null, build: buildHamster },
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
@@ -977,7 +977,10 @@ let gltfLoaderPromise = null;
 function loadGLB(path, height = 2.8) {
   if (!gltfLoaderPromise) gltfLoaderPromise = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"; s.onload = () => res(new THREE.GLTFLoader()); s.onerror = rej; document.head.appendChild(s); });
   return gltfLoaderPromise.then((loader) => new Promise((res, rej) => loader.load(path, (g) => {
-    const obj = g.scene, box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
+    const obj = g.scene;
+    // 画像の色をそのままの明るさで出す（ほかの物の色合いとそろえる）／影を受ける質感に
+    obj.traverse((o) => { if (o.isMesh) [].concat(o.material).forEach((m) => { if (m.map) { m.map.encoding = THREE.LinearEncoding; m.map.needsUpdate = true; } m.metalness = 0; m.needsUpdate = true; }); });
+    const box = new THREE.Box3().setFromObject(obj), size = new THREE.Vector3(), c = new THREE.Vector3();
     box.getSize(size); box.getCenter(c);
     const k = height / Math.max(size.y, .001);
     obj.scale.setScalar(k); obj.position.set(-c.x * k, -box.min.y * k, -c.z * k);

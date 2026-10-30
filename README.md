@@ -144,3 +144,11 @@ ribbon: { name: "リボン", price: 40, level: 2, color: "#f47b9b", png: "images
 
 `ITEMS` `CROPS` `FISHES` `DECOR` `WEAR` `SPECIES` に1行足すと、お店・はたけ・つり・図鑑に自動で出ます。
 新しい動物を増やすときは、見た目を作る関数（`build`）か、3Dモデル（`glb`）が必要です。
+
+## いま入っている素材
+
+| ファイル | 中身 | 作りかた |
+|---|---|---|
+| `models/penguin.glb` | ペンギン（紺） | Meshy 6 Lite（無料プラン・CC BY 4.0）。画像を軽くするため、色の画像を1024pxにし、金属っぽさの画像は外しています |
+
+> Meshy の無料プランで作ったモデルは CC BY 4.0 です。公開するときは「3Dモデル：Meshyで生成」の表記を入れてください。
