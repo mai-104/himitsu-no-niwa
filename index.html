@@ -142,6 +142,15 @@ img.pimg { display: block; object-fit: contain; }
 .zcard.lock b { color: var(--soft); }
 .zface { height: 60px; display: grid; place-items: center; }
 .zface svg { height: 56px; width: auto; }
+.backup { background: var(--card); border-radius: 16px; padding: 12px; display: grid; gap: 8px; }
+.backup h3 { margin: 0; font-size: 15px; font-weight: 900; }
+.bbtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.backup button { border: 0; border-radius: 999px; background: var(--coral); color: #fff; font-weight: 900; font-size: 13px; padding: 7px 14px; }
+.backup button.sub2 { background: var(--line); color: var(--ink); }
+.backup textarea { width: 100%; font: 12px/1.4 ui-monospace, monospace; border: 2px solid var(--line); border-radius: 10px; padding: 8px; resize: vertical; word-break: break-all; user-select: text; -webkit-user-select: text; }
+#exportBox, #importBox { display: grid; gap: 6px; }
+.err { margin: 0; font-size: 12px; color: #c4462e; min-height: 1em; }
+.credits { margin: 4px 0 0; font-size: 11px; color: var(--soft); text-align: center; line-height: 1.7; }
 .reset { align-self: center; border: 0; background: transparent; color: var(--soft); font-size: 12px; text-decoration: underline; padding: 8px; }
 .confirm { background: var(--card); border-radius: 14px; padding: 12px; display: grid; gap: 8px; text-align: center; font-size: 13px; font-weight: 700; }
 .confirm div { display: flex; gap: 8px; justify-content: center; }
@@ -249,11 +258,19 @@ img.pimg { display: block; object-fit: contain; }
       <h2>ずかん</h2>
       <p class="lead">おむかえした動物と、見られた成長のすがたが記録されます。</p>
       <div class="zgrid" id="zgrid"></div>
+      <div class="backup">
+        <h3>データのひきつぎ</h3>
+        <p class="note">育てたデータは、このスマホのブラウザに保存されています。ブラウザのデータを消したり、スマホを変えたりする前に「ひきつぎコード」を書き出して、メモ帳などに保存しておいてください。</p>
+        <div class="bbtns"><button type="button" id="exportBtn">コードを書き出す</button><button type="button" id="importBtn" class="sub2">コードで読みこむ</button></div>
+        <div id="exportBox" hidden><textarea id="exportText" readonly rows="4"></textarea><button type="button" id="copyBtn">コピーする</button></div>
+        <div id="importBox" hidden><textarea id="importText" rows="4" placeholder="ひきつぎコードを ここに貼りつけ"></textarea><p class="err" id="importErr"></p><button type="button" id="importDo">このデータで上書きする</button></div>
+      </div>
       <button class="reset" id="resetBtn" type="button">データをはじめからにする</button>
       <div class="confirm" id="resetConfirm" hidden>
         <span>ほんとうに、はじめからにしますか？</span>
         <div><button type="button" id="resetNo">やめる</button><button type="button" class="danger" id="resetYes">はじめから</button></div>
       </div>
+      <p class="credits" id="credits"></p>
     </div>
   </section>
 
@@ -426,6 +443,11 @@ const SPECIES = {
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
 };
 const FUTURE_SLOTS = 1;   // 図鑑の「まだ見ぬなかま」の枠
+// AI使用・素材の表記（ずかん画面の一番下に出ます）。素材を差し替えたら、ここも書きかえてください
+const CREDITS = [
+  "3Dモデル（ペンギン）：Meshyで生成（CC BY 4.0）",
+  "3Dモデルの元の絵：ChatGPTで生成",
+];
 // 3Dモデルの目の位置（ねむる時・まばたきの時に、まぶたを重ねる場所）。新しいモデルを入れた時はマリンが調べて書きます
 //   c: 目のまん中、n: 目が向いている方向、r: 目の大きさ、lid: まわりの顔の色（まぶたの色）
 const MODEL_EYES = {
@@ -1671,6 +1693,37 @@ setInterval(() => { applyTime(); Save.store(); Care.refresh(false); Room3D.apply
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") { const h = applyTime(); Care.checkWalks(); Save.store(); Care.refresh(false); if (h >= 1) Care.greet(h); }
 });
+$("credits").innerHTML = CREDITS.map((c) => c.replace(/[<>&]/g, "")).join("<br>");
+/* データのひきつぎ（書き出し・読みこみ） */
+const Backup = {
+  encode() { return "DOUBUTSU1:" + btoa(unescape(encodeURIComponent(JSON.stringify(D())))); },
+  decode(code) {
+    const m = String(code).trim().match(/^DOUBUTSU1:([A-Za-z0-9+/=\s]+)$/);
+    if (!m) throw new Error("form");
+    const d = JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/\s/g, "")))));
+    if (!d || d.v !== 2 || !d.animals || !d.items) throw new Error("data");
+    return d;
+  },
+};
+$("exportBtn").onclick = () => { $("importBox").hidden = true; $("exportBox").hidden = false; $("exportText").value = Backup.encode(); };
+$("copyBtn").onclick = () => {
+  const t = $("exportText");
+  navigator.clipboard?.writeText(t.value).then(() => toast("コピーしました。メモ帳などに貼って保存してね"), () => { t.select(); toast("コードを長押ししてコピーしてね"); })
+    ?? (t.select(), toast("コードを長押ししてコピーしてね"));
+};
+$("importBtn").onclick = () => { $("exportBox").hidden = true; $("importBox").hidden = false; $("importErr").textContent = ""; };
+$("importText").oninput = () => ($("importErr").textContent = "");
+$("importDo").onclick = () => {
+  const v = $("importText").value;
+  if (!v.trim()) { $("importErr").textContent = "ひきつぎコードを貼りつけてください"; return; }
+  let d;
+  try { d = Backup.decode(v); } catch (e) { $("importErr").textContent = "コードが読みとれませんでした。最初から最後まで全部コピーできているか確かめてください"; return; }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(d)); } catch (_) {}
+  Save.load(); Save.data.last = Date.now(); Save.store();
+  $("importBox").hidden = true; $("importText").value = "";
+  Care.refresh(true); Room3D.buildDecor(); Farm.render(); Fishing.render(); Zukan.render();
+  toast("データを読みこみました！");
+};
 $("resetBtn").onclick = () => ($("resetConfirm").hidden = false);
 $("resetNo").onclick = () => ($("resetConfirm").hidden = true);
 $("resetYes").onclick = () => { Save.reset(); $("resetConfirm").hidden = true; Care.refresh(true); Room3D.buildDecor(); Farm.render(); Fishing.render(); Zukan.render(); toast("はじめからにしました"); };
