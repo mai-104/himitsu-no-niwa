@@ -629,7 +629,7 @@ function buildPenguin(look = {}) {
   const navy = M(look.body ?? 0x2f4a78), white = M(look.belly ?? 0xfbf6ee), yellow = M(look.beak ?? 0xf5b52e), pink = M(look.cheek ?? 0xf7c3cf);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   ell(navy, 1, 1, 1.02, .95, 0, 1.0, 0, body);                      // 胴（たまご形）
-  ell(white, .82, .96, 1.0, .62, 0, .9, .44, body);                 // おなか
+  ell(white, .82, .96, 1.0, .62, 0, .9, .5, body);                  // おなか（少し前に出して、ふちがギザギザしないように）
   const tail = new THREE.Mesh(new THREE.ConeGeometry(.32, .7, 4), navy); // 三角のしっぽ
   tail.scale.set(1, 1, .35); tail.rotation.x = -1.9; tail.position.set(0, .35, -.9); body.add(tail);
   for (const s of [-1, 1]) {                                         // 足（指が3本）
@@ -643,11 +643,12 @@ function buildPenguin(look = {}) {
   const head = new THREE.Group(); head.position.set(0, 2.05, .05); body.add(head);
   ell(navy, .86, 1.04, .96, 1, 0, 0, 0, head);                      // 頭（大きくまるく）
   // ハート形の白い顔：目のまわりの2つのふくらみ＋下のつながり
-  for (const s of [-1, 1]) ell(white, .36, 1, 1.05, .55, .27 * s, .02, .58, head);
-  ell(white, .42, 1.25, .75, .55, 0, -.28, .55, head);
-  const beak = ell(yellow, .13, 1.15, .65, 1.1, 0, -.12, .9, head);    // くちばし
-  for (const s of [-1, 1]) ell(pink, .11, 1, .6, .3, .45 * s, -.22, .7, head);
-  const eyes = addEyes(head, .27, .05, .8, .09);
+  //（頭の表面から少しだけ出るように、深めの形を前にずらして重ねる）
+  for (const s of [-1, 1]) ell(white, .52, .74, 1.08, .9, .27 * s, -.04, .42, head);
+  ell(white, .58, 1.12, .72, .9, 0, -.2, .36, head);
+  const beak = ell(yellow, .13, 1.15, .65, 1.1, 0, -.12, .92, head);   // くちばし
+  for (const s of [-1, 1]) ell(pink, .11, 1, .6, .3, .46 * s, -.2, .8, head);
+  const eyes = addEyes(head, .27, .05, .83, .09);
   return makeRig(root, body, head, { eyes, arms, tail, nose: beak, earType: "flipper", anchor: anchorOn(head, .8) });
 }
 function buildHamster(look = {}) {
