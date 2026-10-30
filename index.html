@@ -440,7 +440,7 @@ const SPECIES = {
              scales: [.55, .75, 1],
              looks: [{ body: 0x9095a0 }, { body: 0x5b6784 }, {}] },   // あかちゃんは灰色、こどもは灰色と紺のあいだ
   hamster: { name: "ハムスター", price: 160, level: 3, foods: ["sunseed", "strawberry", "pumpkin"], desc: "ほっぺがふくらむハムスター。ひまわりのたねが好き。", glb: "models/hamster.glb", build: buildHamster,   // Meshy 6 Lite で作ったモデル
-             scales: [.55, .75, 1] },
+             scales: [.42, .58, .78] },
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
 };
 const FUTURE_SLOTS = 1;   // 図鑑の「まだ見ぬなかま」の枠
@@ -453,7 +453,7 @@ const CREDITS = [
 //   c: 目のまん中、n: 目が向いている方向、r: 目の大きさ、lid: まわりの顔の色（まぶたの色）
 const MODEL_EYES = {
   "models/penguin.glb":      { lid: 0xfef6e8, eyes: [{ c: [-.306, .351, .595], n: [-.406, .36, .84], r: .091 }, { c: [.31, .339, .597], n: [.456, .241, .857], r: .082 }] },
-  "models/hamster.glb":      { lid: 0xfccfad, eyes: [{ c: [-.284, .423, .71], n: [-.37, .469, .802], r: .101 }, { c: [.293, .409, .711], n: [.447, .397, .802], r: .095 }] },
+  "models/hamster.glb":      { lid: 0xfccfad, eyes: [{ c: [-.278, .428, .709], n: [-.32, .487, .813], r: .105 }, { c: [.272, .414, .715], n: [.324, .428, .844], r: .099 }] },
   "models/penguin_gray.glb": { lid: 0xfdf5f6, eyes: [{ c: [-.296, .196, .568], n: [-.52, .021, .854], r: .073 }, { c: [.289, .195, .569], n: [.499, .001, .867], r: .073 }] },
 };
 /** 目の上に重ねる「とじた目」（顔の色のふた＋下向きのカーブ線） */
