@@ -409,10 +409,14 @@ const WEAR = {
   crown:  { name: "おうかん",       price: 150, level: 6, color: "#f2c13a" },
 };
 // 動物。foods＝食べるもの（前のものから順に使う）、price/level＝おむかえの値段とおせわレベル
+//   looks: 成長段階ごとの色 [あかちゃん, こども, おとな]。書いた色だけ変わる（{} はふつうの色）
+//          使える色の名前：うさぎ fur/inner/pink、ペンギン body/belly/beak/cheek、ハムスター fur/white/pink、ねこ fur/white/stripe/pink
+//   glb: 3Dモデル。1つなら全段階共通、[あかちゃん, こども, おとな] のように段階ごとにも書ける（null の段階は作った見た目）
 //   glb: に3Dモデルのファイル名を書くと、作った見た目の代わりにそれを表示（その時は全身の動きだけ）
 const SPECIES = {
   usagi:   { name: "うさぎ",     price: 40,  level: 1, foods: ["carrot", "strawberry", "pumpkin"], desc: "たれ耳のふわふわうさぎ。にんじんが大好き。", glb: null, build: buildRabbit },
-  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: null, build: buildPenguin },
+  pengin:  { name: "ペンギン",   price: 90,  level: 2, foods: ["iwashi", "aji", "saba", "tai"],     desc: "よちよち歩きのペンギン。おさかなが大好き。", glb: null, build: buildPenguin,
+             looks: [{ body: 0x9095a0 }, { body: 0x5b6784 }, {}] },   // あかちゃんは灰色、こどもは灰色と紺のあいだ
   hamster: { name: "ハムスター", price: 160, level: 3, foods: ["sunseed", "strawberry", "pumpkin"], desc: "ほっぺがふくらむハムスター。ひまわりのたねが好き。", glb: null, build: buildHamster },
   neko:    { name: "ねこ",       price: 260, level: 5, foods: ["aji", "iwashi", "saba", "tai"],     desc: "きまぐれなねこ。おさかなをあげると、ごろごろ。", glb: null, build: buildCat },
 };
@@ -604,8 +608,8 @@ function addArms(body, mat, x, y, z, r, len) {
 function makeRig(root, body, head, parts) { return Object.assign({ root, body, head, ears: [], eyes: [], arms: [], tail: null, nose: null, anchor: null, earType: "" }, parts); }
 function anchorOn(head, y) { const a = new THREE.Group(); a.position.set(0, y, 0); head.add(a); return a; }
 
-function buildRabbit() {
-  const fur = M(0xf7efe4), pink = M(0xf4a6b6), inner = M(0xf7c3cf);
+function buildRabbit(look = {}) {
+  const fur = M(look.fur ?? 0xf7efe4), pink = M(look.pink ?? 0xf4a6b6), inner = M(look.inner ?? 0xf7c3cf);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   ell(fur, 1, 1, .9, 1.05, 0, .95, 0, body);
   const tail = ell(fur, .3, 1, 1, 1, 0, .85, -1.0, body);
@@ -620,23 +624,34 @@ function buildRabbit() {
   const ears = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.66 * s, .3, .05); g.rotation.z = .3 * s; head.add(g); ell(fur, .25, 1, 3, .55, 0, -.5, 0, g); ell(inner, .16, .8, 2.5, .3, -.04 * s, -.5, .1, g); return g; });
   return makeRig(root, body, head, { ears, eyes, arms, tail, nose, earType: "lop", anchor: anchorOn(head, .72) });
 }
-function buildPenguin() {
-  const navy = M(0x2f3a52), white = M(0xfbf8f1), orange = M(0xf5a33c), pink = M(0xf7b8c4);
+/* ペンギン（ぬいぐるみ風：まるい頭・ハート形の白い顔・まるいつばさ・三角のしっぽ・指のある足） */
+function buildPenguin(look = {}) {
+  const navy = M(look.body ?? 0x2f4a78), white = M(look.belly ?? 0xfbf6ee), yellow = M(look.beak ?? 0xf5b52e), pink = M(look.cheek ?? 0xf7c3cf);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  ell(navy, 1, .95, 1.15, .9, 0, 1.1, 0, body);
-  ell(white, .82, .95, 1.05, .6, 0, 1.0, .42, body);
-  for (const s of [-1, 1]) { const f = ell(orange, .28, 1.1, .35, 1.5, .38 * s, .08, .55, body); f.rotation.y = -.2 * s; }
-  const arms = [-1, 1].map((s) => { const g = new THREE.Group(); g.position.set(.88 * s, 1.6, 0); body.add(g); ell(navy, .3, .35, 1.6, .9, 0, -.42, 0, g); g.userData.side = s; return g; });
-  const head = new THREE.Group(); head.position.set(0, 2.25, .1); body.add(head);
-  ell(navy, .72, 1.05, .95, 1, 0, 0, 0, head);
-  ell(white, .55, 1.15, .85, .6, 0, -.08, .36, head);
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(.13, .3, 16), orange); beak.rotation.x = Math.PI / 2; beak.position.set(0, -.12, .74); head.add(beak);
-  for (const s of [-1, 1]) ell(pink, .12, 1, .65, .35, .4 * s, -.22, .55, head);
-  const eyes = addEyes(head, .22, .08, .66, .1);
-  return makeRig(root, body, head, { eyes, arms, nose: beak, earType: "flipper", anchor: anchorOn(head, .66) });
+  ell(navy, 1, 1, 1.02, .95, 0, 1.0, 0, body);                      // 胴（たまご形）
+  ell(white, .82, .96, 1.0, .62, 0, .9, .44, body);                 // おなか
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.32, .7, 4), navy); // 三角のしっぽ
+  tail.scale.set(1, 1, .35); tail.rotation.x = -1.9; tail.position.set(0, .35, -.9); body.add(tail);
+  for (const s of [-1, 1]) {                                         // 足（指が3本）
+    ell(yellow, .26, 1.15, .3, 1.15, .4 * s, .07, .5, body);
+    for (const t of [-1, 0, 1]) ell(yellow, .09, 1, .7, 1, .4 * s + t * .14, .07, .76, body);
+  }
+  const arms = [-1, 1].map((s) => {                                  // まるいつばさ
+    const g = new THREE.Group(); g.position.set(.9 * s, 1.45, -.05); body.add(g);
+    ell(navy, .32, .38, 1.25, .75, 0, -.33, 0, g); g.userData.side = s; return g;
+  });
+  const head = new THREE.Group(); head.position.set(0, 2.05, .05); body.add(head);
+  ell(navy, .86, 1.04, .96, 1, 0, 0, 0, head);                      // 頭（大きくまるく）
+  // ハート形の白い顔：目のまわりの2つのふくらみ＋下のつながり
+  for (const s of [-1, 1]) ell(white, .36, 1, 1.05, .55, .27 * s, .02, .58, head);
+  ell(white, .42, 1.25, .75, .55, 0, -.28, .55, head);
+  const beak = ell(yellow, .13, 1.15, .65, 1.1, 0, -.12, .9, head);    // くちばし
+  for (const s of [-1, 1]) ell(pink, .11, 1, .6, .3, .45 * s, -.22, .7, head);
+  const eyes = addEyes(head, .27, .05, .8, .09);
+  return makeRig(root, body, head, { eyes, arms, tail, nose: beak, earType: "flipper", anchor: anchorOn(head, .8) });
 }
-function buildHamster() {
-  const fur = M(0xf0c27a), white = M(0xfdf6ea), pink = M(0xf4a6b6);
+function buildHamster(look = {}) {
+  const fur = M(look.fur ?? 0xf0c27a), white = M(look.white ?? 0xfdf6ea), pink = M(look.pink ?? 0xf4a6b6);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   ell(fur, 1, 1.05, .95, 1, 0, 1.0, 0, body);
   ell(white, .75, 1, .95, .6, 0, .85, .5, body);
@@ -651,8 +666,8 @@ function buildHamster() {
   for (const s of [-1, 1]) ell(M(0xf7c3cf), .12, 1, .6, .3, .55 * s, -.2, .55, head);
   return makeRig(root, body, head, { ears, eyes, arms, nose, earType: "round", anchor: anchorOn(head, .74) });
 }
-function buildCat() {
-  const fur = M(0xeab47a), white = M(0xfdf6ea), pink = M(0xf4a6b6), stripe = M(0xc98a4e);
+function buildCat(look = {}) {
+  const fur = M(look.fur ?? 0xeab47a), white = M(look.white ?? 0xfdf6ea), pink = M(look.pink ?? 0xf4a6b6), stripe = M(look.stripe ?? 0xc98a4e);
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
   ell(fur, 1, .9, .95, 1.1, 0, .95, -.05, body);
   ell(white, .65, 1, 1, .6, 0, .9, .55, body);
@@ -830,14 +845,16 @@ const Room3D = {
     if (this.rig) this.holder.remove(this.rig.root);
     this.rig = null;
     if (!id) return;
-    const sp = SPECIES[id], a = D().animals[id];
-    if (sp.glb) {
+    const sp = SPECIES[id], a = D().animals[id], stage = stageOf(a);
+    const glb = Array.isArray(sp.glb) ? sp.glb[stage] : sp.glb;
+    this.shownStage = stage;
+    if (glb) {
       const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
       this.rig = makeRig(root, body, null, { anchor: new THREE.Group() });
       body.add(this.rig.anchor);
       const rig = this.rig;
-      loadGLB(sp.glb).then(({ obj, top }) => { body.add(obj); rig.anchor.position.y = top; });
-    } else this.rig = sp.build();
+      loadGLB(glb).then(({ obj, top }) => { body.add(obj); rig.anchor.position.y = top; });
+    } else this.rig = sp.build((sp.looks && sp.looks[stage]) || {});
     this.rig.id = id;
     this.holder.add(this.rig.root);
     this.setStage(stageOf(a), false);
@@ -846,6 +863,9 @@ const Room3D = {
     this.anim.out = -1; this.anim.back = -1;
   },
   setStage(stage, celebrate) {
+    // 段階ごとに色やモデルが変わる動物は、作り直す
+    const sp = this.rig && SPECIES[this.rig.id];
+    if (celebrate && sp && (sp.looks || Array.isArray(sp.glb)) && this.shownStage !== stage) { const r = this.rotY; this.show(this.rig.id); this.rotY = r; }
     const st = CONFIG.stages[stage];
     this.baseScale = st.scale;
     if (this.rig?.head) this.rig.head.scale.setScalar(st.head);
@@ -1519,7 +1539,7 @@ const Quest = {
 /* ---------- 8f. Zukan（ずかん） ---------- */
 const ZFACE = {
   usagi: '<svg viewBox="0 0 64 56"><ellipse cx="14" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="50" cy="34" rx="7" ry="15" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><ellipse cx="32" cy="28" rx="19" ry="17" fill="#f7efe4" stroke="#e2d6c6" stroke-width="1.5"/><circle cx="25" cy="27" r="2.6" fill="#2d2420"/><circle cx="39" cy="27" r="2.6" fill="#2d2420"/><ellipse cx="20" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="44" cy="34" rx="4" ry="2.5" fill="#f7c3cf"/><ellipse cx="32" cy="32" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
-  pengin: '<svg viewBox="0 0 64 56"><ellipse cx="32" cy="29" rx="19" ry="18" fill="#2f3a52"/><ellipse cx="32" cy="32" rx="14" ry="12" fill="#fbf8f1"/><circle cx="26" cy="29" r="2.4" fill="#1d2230"/><circle cx="38" cy="29" r="2.4" fill="#1d2230"/><path d="M29 34l3 4 3-4z" fill="#f5a33c"/><ellipse cx="22" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/><ellipse cx="42" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/></svg>',
+  pengin: '<svg viewBox="0 0 64 56"><ellipse cx="32" cy="29" rx="19" ry="18" fill="#2f4a78"/><ellipse cx="26" cy="29" rx="7.5" ry="9" fill="#fbf6ee"/><ellipse cx="38" cy="29" rx="7.5" ry="9" fill="#fbf6ee"/><ellipse cx="32" cy="35" rx="10" ry="7" fill="#fbf6ee"/><circle cx="26" cy="29" r="2.4" fill="#1d2230"/><circle cx="38" cy="29" r="2.4" fill="#1d2230"/><ellipse cx="32" cy="35" rx="3" ry="2" fill="#f5b52e"/><ellipse cx="22" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/><ellipse cx="42" cy="36" rx="3.5" ry="2" fill="#f7b8c4"/></svg>',
   hamster: '<svg viewBox="0 0 64 56"><circle cx="17" cy="13" r="6" fill="#f0c27a"/><circle cx="47" cy="13" r="6" fill="#f0c27a"/><circle cx="17" cy="13" r="3.5" fill="#f4a6b6"/><circle cx="47" cy="13" r="3.5" fill="#f4a6b6"/><ellipse cx="32" cy="30" rx="21" ry="18" fill="#f0c27a"/><ellipse cx="20" cy="36" rx="8" ry="7" fill="#fdf6ea"/><ellipse cx="44" cy="36" rx="8" ry="7" fill="#fdf6ea"/><circle cx="25" cy="27" r="2.5" fill="#2d2420"/><circle cx="39" cy="27" r="2.5" fill="#2d2420"/><ellipse cx="32" cy="33" rx="2" ry="1.5" fill="#f4a6b6"/></svg>',
   neko: '<svg viewBox="0 0 64 56"><path d="M14 22L16 4l14 12zM50 22L48 4 34 16z" fill="#eab47a"/><path d="M17 17l1-8 6 6zM47 17l-1-8-6 6z" fill="#f4a6b6"/><ellipse cx="32" cy="30" rx="20" ry="17" fill="#eab47a"/><ellipse cx="32" cy="37" rx="9" ry="6" fill="#fdf6ea"/><path d="M27 16h2M31 15h2M35 16h2" stroke="#c98a4e" stroke-width="2" stroke-linecap="round"/><circle cx="25" cy="28" r="2.6" fill="#2d2420"/><circle cx="39" cy="28" r="2.6" fill="#2d2420"/><ellipse cx="32" cy="34" rx="2" ry="1.4" fill="#f4a6b6"/></svg>',
 };
